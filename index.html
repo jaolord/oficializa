@@ -147,7 +147,7 @@
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
                 </button>
 
-                <!-- Botão do Criador visível EXCLUSIVAMENTE para d_mob580@hotmail.com -->
+                <!-- Botão do Criador visível EXCLUSIVAMENTE para administradores autorizados -->
                 <button id="admin-trigger-btn" onclick="openAdminModal()" class="hidden px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-amber-700 dark:text-amber-400 text-xs font-bold border border-amber-500/30 transition cursor-pointer flex items-center gap-1.5" title="Área do Criador">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
                     <span class="hidden md:inline">Painel do Criador</span>
@@ -432,7 +432,7 @@
                     </div>
                 </form>
 
-                <!-- Lista para Editar/Excluir Simulados Cadastrados (Incluindo o Exemplo) -->
+                <!-- Lista para Editar/Excluir Simulados Cadastrados -->
                 <div>
                     <h4 class="text-sm font-black text-slate-900 dark:text-white mb-3">Simulados da Plataforma (Exemplo & Personalizados)</h4>
                     <div id="admin-simulados-list" class="space-y-2 max-h-60 overflow-y-auto">
@@ -459,7 +459,7 @@
                 </form>
             </div>
 
-            <!-- Aba 3: Gerenciar Ranking (Limpar/Excluir Registros de Teste) -->
+            <!-- Aba 3: Gerenciar Ranking -->
             <div id="admin-tab-ranking" class="hidden space-y-4">
                 <div class="bg-slate-50 dark:bg-slate-950/60 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-4">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -534,7 +534,7 @@
             }
         })();
 
-        // Helper para obter sempre o Nome de Exibição (nunca o e-mail completo)
+        // Helper para obter sempre o Nome de Exibição
         function getDisplayName(user) {
             if (window.candidateName && window.candidateName.trim()) return window.candidateName.trim();
             if (user?.displayName && user.displayName.trim()) return user.displayName.trim();
@@ -983,6 +983,61 @@
                 }).join('');
 
                 const qComments = questionComments[q.id] || [];
+                const commentsHtml = qComments.map(c => `
+                    <div class="p-3 rounded-xl bg-slate-100 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 text-xs">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="font-bold text-amber-600 dark:text-amber-400">${c.name}</span>
+                            <span class="text-[10px] text-slate-400">${new Date(c.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                        </div>
+                        <p class="text-slate-700 dark:text-slate-300 leading-relaxed">${c.text}</p>
+                    </div>
+                `).join('');
+
+                const card = document.createElement('div');
+                card.className = "bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-xl space-y-6";
+                card.innerHTML = `
+                    <div class="flex items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-4">
+                        <div class="flex items-center gap-2">
+                            <span class="px-3 py-1 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-xs font-black uppercase">Questão ${q.id}</span>
+                            <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">${q.theme}</span>
+                        </div>
+                    </div>
+                    <p class="text-sm sm:text-base font-semibold text-slate-900 dark:text-white leading-relaxed">${q.text}</p>
+                    <div class="space-y-3">${optionsHtml}</div>
+                    ${isAnswered ? `
+                        <div class="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-3">
+                            <h5 class="text-xs font-black uppercase tracking-wider text-amber-600 dark:text-amber-400">Gabarito Comentado</h5>
+                            <p class="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed">${q.correctExplanation}</p>
+                        </div>
+                    ` : ''}
+                    <div class="pt-4 border-t border-slate-200 dark:border-slate-800 space-y-4">
+                        <h6 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Comentários e Dúvidas da Questão</h6>
+                        <div class="space-y-2 max-h-48 overflow-y-auto">${commentsHtml || '<p class="text-xs text-slate-400">Nenhum comentário ainda. Seja o primeiro a comentar!</p>'}</div>
+                        <form onsubmit="handlePostComment(event, ${q.id})" class="flex gap-2">
+                            <input type="text" id="comment-input-${q.id}" required placeholder="Deixe seu comentário ou dúvida..." class="flex-1 px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-xs text-slate-900 dark:text-white focus:border-amber-500 focus:outline-none" />
+                            <button type="submit" class="px-4 py-2.5 rounded-xl bg-amber-500 text-slate-950 text-xs font-black hover:bg-amber-400 transition cursor-pointer">Comentar</button>
+                        </form>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+
+            document.getElementById('quiz-progress-badge').textContent = `${answeredCount}/${activeSimulado.questions.length} resp.`;
+            document.getElementById('quiz-correct-count').textContent = correctCount;
+            document.getElementById('quiz-wrong-count').textContent = wrongCount;
+            document.getElementById('filter-all-count').textContent = activeSimulado.questions.length;
+            document.getElementById('filter-wrong-count').textContent = wrongCount;
+
+            if (answeredCount === activeSimulado.questions.length && activeSimulado.questions.length > 0) {
+                const finalPct = Math.round((correctCount / activeSimulado.questions.length) * 100);
+                document.getElementById('quiz-final-pct').textContent = `${finalPct}%`;
+                document.getElementById('quiz-summary-box').classList.remove('hidden');
+                syncRanking();
+            } else {
+                document.getElementById('quiz-summary-box').classList.add('hidden');
+            }
+        }
+
         // Escuta comentários em tempo real para o simulado aberto
         function listenCommentsForSimulado(simId) {
             if (!db) return;
@@ -1575,7 +1630,7 @@
                 setTimeout(() => succBox.classList.add('hidden'), 2500);
             } catch (err) {
                 errBox.textContent = "Erro ao processar JSON: " + err.message;
-                errBox.classList.remove('hidden');
+                errBox.classList.add('hidden');
             }
         };
 
