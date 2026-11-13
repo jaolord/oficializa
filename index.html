@@ -279,9 +279,17 @@
         }
         /* Abas da home */
         html.light #home-tab-catalog-btn.bg-amber-500,
-        html.light #home-tab-metrics-btn.bg-amber-500 {
+        html.light #home-tab-metrics-btn.bg-amber-500,
+        html.light #home-tab-cronograma-btn.bg-amber-500 {
             background-color: #f59e0b !important;
             color: #0f172a !important;
+        }
+        html.light #cronograma-calendar > div {
+            background-color: #f8fafc !important;
+            border-color: #e2e8f0 !important;
+        }
+        html.light #cronograma-calendar .text-slate-400 {
+            color: #64748b !important;
         }
         /* Métricas */
         html.light #home-content-metrics .text-3xl {
@@ -421,9 +429,10 @@
          ========================================================= -->
     <div id="view-home" class="flex-1 max-w-7xl w-full mx-auto px-4 py-8 space-y-8">
         <!-- Abas da Home -->
-        <div class="flex rounded-2xl bg-slate-900 p-1.5 border border-slate-800 shadow-sm max-w-md">
-            <button onclick="switchHomeTab('catalog')" id="home-tab-catalog-btn" class="flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider bg-amber-500 text-slate-950 transition cursor-pointer">Simulados & Catálogo</button>
-            <button onclick="switchHomeTab('metrics')" id="home-tab-metrics-btn" class="flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider text-slate-400 hover:text-white transition cursor-pointer">Desempenho & Métricas</button>
+        <div class="flex rounded-2xl bg-slate-900 p-1.5 border border-slate-800 shadow-sm max-w-2xl">
+            <button onclick="switchHomeTab('catalog')" id="home-tab-catalog-btn" class="flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider bg-amber-500 text-slate-950 transition cursor-pointer">Simulados</button>
+            <button onclick="switchHomeTab('metrics')" id="home-tab-metrics-btn" class="flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider text-slate-400 hover:text-white transition cursor-pointer">Métricas</button>
+            <button onclick="switchHomeTab('cronograma')" id="home-tab-cronograma-btn" class="flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider text-slate-400 hover:text-white transition cursor-pointer">Cronograma</button>
         </div>
 
         <!-- CONTEÚDO 1: CATÁLOGO DE SIMULADOS -->
@@ -514,6 +523,95 @@
 
                 <div id="detailed-metrics-breakdown" class="space-y-4">
                     <!-- Preenchido via JS no formato QConcursos -->
+                </div>
+            </div>
+        </div>
+
+        <!-- CONTEÚDO 3: CRONOGRAMA DE ESTUDOS -->
+        <div id="home-content-cronograma" class="hidden space-y-6">
+            <div class="bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-800 shadow-xl space-y-6">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+                    <div>
+                        <span class="text-xs font-extrabold uppercase tracking-widest text-amber-400">Planejamento Inteligente</span>
+                        <h3 class="text-xl sm:text-2xl font-black text-white mt-0.5">Cronograma de Estudos</h3>
+                        <p class="text-xs text-slate-400 mt-1">Organize seus tópicos do edital CFO PMBA. Você pode montar manualmente ou gerar automaticamente pela Curva do Esquecimento.</p>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="generateForgettingCurveSchedule()" class="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black transition cursor-pointer">
+                            ⚡ Gerar pela Curva do Esquecimento
+                        </button>
+                        <button onclick="clearCronograma()" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold border border-slate-700 transition cursor-pointer">
+                            Limpar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Configurações rápidas -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Horas de estudo / dia</label>
+                        <select id="crono-hours-per-day" class="w-full px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-sm focus:border-amber-500 focus:outline-none">
+                            <option value="1">1 hora</option>
+                            <option value="2" selected>2 horas</option>
+                            <option value="3">3 horas</option>
+                            <option value="4">4 horas</option>
+                            <option value="5">5 horas</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Dias de estudo na semana</label>
+                        <select id="crono-days-per-week" class="w-full px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-sm focus:border-amber-500 focus:outline-none">
+                            <option value="5" selected>5 dias (seg–sex)</option>
+                            <option value="6">6 dias</option>
+                            <option value="7">7 dias</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Prazo (semanas)</label>
+                        <select id="crono-weeks" class="w-full px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-sm focus:border-amber-500 focus:outline-none">
+                            <option value="4">4 semanas</option>
+                            <option value="8" selected>8 semanas</option>
+                            <option value="12">12 semanas</option>
+                            <option value="16">16 semanas</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Navegação do calendário -->
+                <div class="flex items-center justify-between">
+                    <button onclick="changeCronoMonth(-1)" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 cursor-pointer">◀</button>
+                    <h4 id="crono-month-label" class="text-sm font-black text-white uppercase tracking-wider">—</h4>
+                    <button onclick="changeCronoMonth(1)" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 cursor-pointer">▶</button>
+                </div>
+
+                <!-- Grade do calendário -->
+                <div id="cronograma-calendar" class="grid grid-cols-7 gap-1.5 sm:gap-2">
+                    <!-- Preenchido via JS -->
+                </div>
+
+                <!-- Lista de tópicos para arrastar / adicionar -->
+                <div class="border-t border-slate-800 pt-5 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h4 class="text-sm font-black text-amber-400 uppercase tracking-wider">Adicionar tópico a um dia</h4>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <select id="crono-topic-select" class="px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs focus:border-amber-500 focus:outline-none">
+                            <option value="">Selecione o tópico do edital...</option>
+                        </select>
+                        <input type="date" id="crono-date-input" class="px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs focus:border-amber-500 focus:outline-none" />
+                        <button onclick="addTopicToCronograma()" class="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black transition cursor-pointer">
+                            + Adicionar ao Dia
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Resumo do dia selecionado -->
+                <div id="crono-day-detail" class="hidden bg-slate-950 rounded-2xl p-5 border border-slate-800 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h4 id="crono-day-title" class="text-sm font-black text-white">—</h4>
+                        <button onclick="closeCronoDayDetail()" class="text-slate-400 hover:text-white text-lg font-bold cursor-pointer">✕</button>
+                    </div>
+                    <div id="crono-day-topics" class="space-y-2"></div>
                 </div>
             </div>
         </div>
@@ -1164,21 +1262,24 @@
         window.switchHomeTab = function(tab) {
             const btnCat = document.getElementById('home-tab-catalog-btn');
             const btnMet = document.getElementById('home-tab-metrics-btn');
+            const btnCro = document.getElementById('home-tab-cronograma-btn');
             const boxCat = document.getElementById('home-content-catalog');
             const boxMet = document.getElementById('home-content-metrics');
+            const boxCro = document.getElementById('home-content-cronograma');
 
-            if (tab === 'catalog') {
-                btnCat.className = "flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider bg-amber-500 text-slate-950 transition cursor-pointer";
-                btnMet.className = "flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider text-slate-400 hover:text-white transition cursor-pointer";
-                boxCat.classList.remove('hidden');
-                boxMet.classList.add('hidden');
-            } else {
-                btnMet.className = "flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider bg-amber-500 text-slate-950 transition cursor-pointer";
-                btnCat.className = "flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider text-slate-400 hover:text-white transition cursor-pointer";
-                boxMet.classList.remove('hidden');
-                boxCat.classList.add('hidden');
-                renderDetailedMetrics();
-            }
+            const active = "flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider bg-amber-500 text-slate-950 transition cursor-pointer";
+            const inactive = "flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider text-slate-400 hover:text-white transition cursor-pointer";
+
+            btnCat.className = tab === 'catalog' ? active : inactive;
+            btnMet.className = tab === 'metrics' ? active : inactive;
+            if (btnCro) btnCro.className = tab === 'cronograma' ? active : inactive;
+
+            boxCat.classList.toggle('hidden', tab !== 'catalog');
+            boxMet.classList.toggle('hidden', tab !== 'metrics');
+            if (boxCro) boxCro.classList.toggle('hidden', tab !== 'cronograma');
+
+            if (tab === 'metrics') renderDetailedMetrics();
+            if (tab === 'cronograma') renderCronograma();
         };
 
         function startTimer() {
@@ -1685,35 +1786,36 @@
             const listEl = document.getElementById('detailed-metrics-breakdown');
             if (!listEl) return;
 
-            let statsBySubject = {};
+            // Agrega estatísticas por category e theme das questões respondidas
+            let statsByCat = {};
             let totalAnsweredGlobal = 0;
             let totalCorrectGlobal = 0;
             let totalWrongGlobal = 0;
 
             allSimulados.forEach(sim => {
                 const cat = sim.category || "Geral";
-                if (!statsBySubject[cat]) statsBySubject[cat] = { answered: 0, correct: 0, wrong: 0, total: 0, topics: {} };
+                if (!statsByCat[cat]) statsByCat[cat] = { answered: 0, correct: 0, wrong: 0, total: 0, topics: {} };
 
                 sim.questions.forEach(q => {
-                    statsBySubject[cat].total++;
-                    const topic = q.theme || q.category || "Geral";
-                    if (!statsBySubject[cat].topics[topic]) {
-                        statsBySubject[cat].topics[topic] = { total: 0, answered: 0, correct: 0, wrong: 0 };
+                    statsByCat[cat].total++;
+                    const topic = q.theme || q.subtopicCode || q.category || "Geral";
+                    if (!statsByCat[cat].topics[topic]) {
+                        statsByCat[cat].topics[topic] = { total: 0, answered: 0, correct: 0, wrong: 0 };
                     }
-                    statsBySubject[cat].topics[topic].total++;
+                    statsByCat[cat].topics[topic].total++;
 
                     const ans = userAnswers[sim.id]?.[q.id];
                     if (ans) {
-                        statsBySubject[cat].answered++;
-                        statsBySubject[cat].topics[topic].answered++;
+                        statsByCat[cat].answered++;
+                        statsByCat[cat].topics[topic].answered++;
                         totalAnsweredGlobal++;
                         if (ans === q.correct) {
-                            statsBySubject[cat].correct++;
-                            statsBySubject[cat].topics[topic].correct++;
+                            statsByCat[cat].correct++;
+                            statsByCat[cat].topics[topic].correct++;
                             totalCorrectGlobal++;
                         } else {
-                            statsBySubject[cat].wrong++;
-                            statsBySubject[cat].topics[topic].wrong++;
+                            statsByCat[cat].wrong++;
+                            statsByCat[cat].topics[topic].wrong++;
                             totalWrongGlobal++;
                         }
                     }
@@ -1745,12 +1847,35 @@
                 pathWrong.setAttribute('stroke-dasharray', `0, 100`);
             }
 
+            // Mapeia categorias dos simulados para matérias do edital
+            const materiaOrder = [
+                "Língua Portuguesa", "Língua Inglesa", "Matemática", "Informática",
+                "História", "Geografia", "Direito Constitucional", "Direitos Humanos",
+                "Direito Administrativo", "Direito Penal", "Direito Processual Penal",
+                "Direito Penal Militar", "Direito Processual Penal Militar", "Geografia e Geopolítica", "Geral"
+            ];
+
+            // Ordena as categorias existentes de forma lógica
+            const sortedCats = Object.keys(statsByCat).sort((a, b) => {
+                const ia = materiaOrder.findIndex(m => a.toLowerCase().includes(m.toLowerCase()));
+                const ib = materiaOrder.findIndex(m => b.toLowerCase().includes(m.toLowerCase()));
+                return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+            });
+
             let html = '';
-            Object.entries(statsBySubject).forEach(([subject, data]) => {
+            sortedCats.forEach(subject => {
+                const data = statsByCat[subject];
                 const subjPct = data.answered > 0 ? Math.round((data.correct / data.answered) * 100) : 0;
                 
+                // Ordena tópicos por código numérico quando possível
+                const sortedTopics = Object.entries(data.topics).sort((a, b) => {
+                    const na = parseFloat((a[0].match(/[\d.]+/) || ['999'])[0]);
+                    const nb = parseFloat((b[0].match(/[\d.]+/) || ['999'])[0]);
+                    return na - nb;
+                });
+
                 let topicsHtml = '';
-                Object.entries(data.topics).forEach(([topicName, tStat]) => {
+                sortedTopics.forEach(([topicName, tStat]) => {
                     const tPct = tStat.answered > 0 ? Math.round((tStat.correct / tStat.answered) * 100) : 0;
                     const correctBarWidth = tStat.answered > 0 ? Math.round((tStat.correct / tStat.answered) * 100) : 0;
                     const wrongBarWidth = tStat.answered > 0 ? Math.round((tStat.wrong / tStat.answered) * 100) : 0;
@@ -1759,7 +1884,7 @@
                         <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
                             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-xs">
                                 <span class="font-bold text-slate-200">${topicName}</span>
-                                <div class="flex items-center gap-2">
+                                <div class="flex items-center gap-2 flex-wrap">
                                     <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-extrabold">Certas: ${tStat.correct}</span>
                                     <span class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-400 font-extrabold">Erradas: ${tStat.wrong}</span>
                                     <span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 font-black">${tPct}%</span>
@@ -1783,7 +1908,7 @@
                             <h4 class="text-sm font-black text-amber-400 uppercase tracking-wider">${subject}</h4>
                             <div class="flex items-center gap-2">
                                 <span class="px-3 py-1 rounded-lg bg-amber-500/10 text-amber-400 text-xs font-bold border border-amber-500/20">
-                                    Aproveitamento da Matéria: ${subjPct}% (${data.correct} certas / ${data.wrong} erradas)
+                                    ${subjPct}% (${data.correct} certas / ${data.wrong} erradas) · ${data.answered}/${data.total} questões
                                 </span>
                             </div>
                         </div>
@@ -1794,8 +1919,32 @@
                 `;
             });
 
-            listEl.innerHTML = html || `<p class="text-xs text-slate-500 text-center py-6">Responda aos simulados para visualizar as estatísticas completas estilo QConcursos por matéria e tópico do edital.</p>`;
+            // Seção do edital completo (mapa do que ainda falta estudar)
+            let editalMapHtml = `
+                <div class="p-5 rounded-2xl bg-slate-950 border border-amber-500/20 space-y-4 mt-2">
+                    <div class="border-b border-slate-800 pb-3">
+                        <h4 class="text-sm font-black text-amber-400 uppercase tracking-wider">Mapa do Edital CFO PMBA</h4>
+                        <p class="text-[11px] text-slate-400 mt-1">Estrutura oficial dos assuntos. Use o Cronograma para planejar o estudo de cada tópico.</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            `;
+            if (typeof EDITAL_TOPICS !== 'undefined') {
+                EDITAL_TOPICS.forEach(mat => {
+                    editalMapHtml += `
+                        <div class="p-3 rounded-xl bg-slate-900 border border-slate-800">
+                            <h5 class="text-xs font-black text-white mb-2">${mat.materia}</h5>
+                            <ul class="space-y-1">
+                                ${mat.topics.map(t => `<li class="text-[11px] text-slate-400 leading-snug">• ${t}</li>`).join('')}
+                            </ul>
+                        </div>
+                    `;
+                });
+            }
+            editalMapHtml += `</div></div>`;
+
+            listEl.innerHTML = (html || `<p class="text-xs text-slate-500 text-center py-6">Responda aos simulados para visualizar as estatísticas por matéria e tópico.</p>`) + editalMapHtml;
         }
+
 
         function loadUserProgressAndRender() {
             renderQuizQuestions();
@@ -1988,6 +2137,406 @@
                 resetAdminForm();
                 alert("Simulado salvo com sucesso!");
             } catch (err) { alert("Erro ao processar conteúdo (verifique se o JSON ou o HTML está íntegro): " + err.message); }
+        };
+
+
+        // ========== EDITAL CFO PMBA - TÓPICOS ORGANIZADOS ==========
+        const EDITAL_TOPICS = [
+            { materia: "I. Língua Portuguesa", topics: [
+                "1. Leitura e interpretação de textos",
+                "1.1 Textos verbais (livros e periódicos)",
+                "1.2 Textos mistos e não verbais",
+                "1.3 Textos publicitários",
+                "2. Nomes e verbo – Flexões nominais e verbais",
+                "3. Advérbio e circunstâncias",
+                "4. Preposições e conjunções",
+                "5. Frase, oração, período – Coordenação e Subordinação",
+                "6. Sintaxe: colocação, concordância, regência e crase",
+                "7. Formas de discurso (direto, indireto e indireto livre)",
+                "8. Semântica: sinonímia, antonímia e heteronímia",
+                "9. Pontuação",
+                "10. Acentuação e ortografia",
+                "11. Redação técnica x redação estilística",
+                "12. Correspondência oficial",
+                "13. Diferença entre ofício e memorando"
+            ]},
+            { materia: "II. Língua Inglesa", topics: [
+                "1. Compreensão de textos verbais e não-verbais",
+                "2. Substantivos – Plural e casos especiais",
+                "3. Gênero – Contáveis e não-contáveis",
+                "4. Formas possessivas e modificadores",
+                "5. Artigos e Demonstrativos",
+                "6. Adjetivos – Comparativo e superlativo",
+                "7. Numerais Cardinais e Ordinais",
+                "8. Pronomes pessoais, possessivos, reflexivos, indefinidos, interrogativos e relativos",
+                "9. Verbos – Modos, tempos, formas, auxiliares, modais, voz ativa/passiva, gerúndio",
+                "10. Discurso direto e indireto – Condicionais",
+                "11. Advérbios e expressões adverbiais",
+                "12. Preposições e conjunções",
+                "13. Derivação (prefixos e sufixos) – Sinonímia e antonímia"
+            ]},
+            { materia: "III. Matemática", topics: [
+                "1. Conjuntos numéricos e progressões",
+                "2. Álgebra – Polinômios, equações e inequações",
+                "3. Funções (1º grau, 2º grau, modular, exponencial e logarítmica)",
+                "4. Sistemas lineares, Matrizes e Determinantes",
+                "5. Análise Combinatória e Probabilidade",
+                "6. Geometria plana, espacial e analítica",
+                "7. Trigonometria",
+                "8. Proporcionalidade e Finanças (juros simples e compostos)",
+                "9. Estatística e tratamento da informação",
+                "10. Resolução de problemas (frações, conjuntos, sequências)"
+            ]},
+            { materia: "IV. Informática", topics: [
+                "1. Editores de texto, planilhas e apresentações (Office e LibreOffice)",
+                "2. Sistemas operacionais (Windows 7/10 e Linux)",
+                "3. Organização de arquivos, pastas e programas",
+                "4. Atalhos, ícones, área de trabalho e lixeira",
+                "5. Internet e intranet",
+                "6. Correio eletrônico",
+                "7. Computação em nuvem",
+                "8. Certificação e assinatura digital",
+                "9. Segurança da Informação",
+                "10. Componentes de um computador",
+                "11. Dispositivos de armazenamento, processadores, memórias e periféricos"
+            ]},
+            { materia: "V. Ciências Humanas – História", topics: [
+                "1. Antiguidade",
+                "2. Mundo Medieval",
+                "3. Mundo Moderno",
+                "4. Mundo Contemporâneo",
+                "5. Brasil Colônia",
+                "6. Brasil Império",
+                "7. Brasil República (1889 aos dias atuais)",
+                "8. Desenvolvimento cultural e científico do Brasil no séc. XX",
+                "9. Globalização e questões ambientais",
+                "10. História da Bahia – Independência, Canudos, Malês, Conjuração, Sabinada",
+                "11. Atualidades"
+            ]},
+            { materia: "V. Ciências Humanas – Geografia", topics: [
+                "1. Relação sociedade-natureza e recursos naturais",
+                "2.1 Capitalismo, industrialização e transnacionalização do capital",
+                "2.2 Industrialização e desenvolvimento tecnológico",
+                "2.3 Papel do Estado e organizações político-econômicas",
+                "2.4 Mobilidade espacial e crescimento demográfico",
+                "2.5 Divisão internacional e territorial do trabalho",
+                "2.6 Fim da Guerra Fria, desagregação da URSS e nova ordem mundial",
+                "3.1 Formação territorial do Brasil",
+                "3.2 Industrialização, urbanização e estrutura agrária brasileira",
+                "3.3 Papel do Estado e políticas territoriais",
+                "3.4 Regionalização do Brasil"
+            ]},
+            { materia: "VI. Direito Constitucional", topics: [
+                "1. Princípios fundamentais da CF",
+                "2. Direitos e garantias fundamentais",
+                "3. Organização do Estado e Administração Pública",
+                "4. Defesa do Estado, Forças Armadas e Segurança Pública",
+                "5. Constituição do Estado da Bahia (militares, Executivo, Justiça Militar, Segurança Pública, família, mulher, criança, idoso, deficiente, negro e índio)"
+            ]},
+            { materia: "VI. Direitos Humanos", topics: [
+                "1. Declaração Universal dos Direitos Humanos (1948)",
+                "2. Pacto de São José da Costa Rica (arts. 1º ao 32)",
+                "3. Convenção sobre Eliminação da Discriminação Racial",
+                "4. Convenção sobre Eliminação da Discriminação contra a Mulher",
+                "5. Estatuto da Igualdade Racial (Lei Estadual 13.182/14)"
+            ]},
+            { materia: "VI. Direito Administrativo", topics: [
+                "1. Princípios fundamentais da Administração Pública",
+                "2. Poderes administrativos",
+                "3. Atos administrativos",
+                "4. Organização administrativa e órgãos públicos",
+                "5. Agentes públicos",
+                "6. Regime jurídico do militar estadual (Lei 7.990/01)",
+                "7. LGPD (Lei 13.709/2018 – arts. 1º ao 32)"
+            ]},
+            { materia: "VI. Direito Penal", topics: [
+                "1. Aplicação da lei penal (tempo e espaço)",
+                "2. Do crime (elementos, tentativa, desistência, exclusão de ilicitude)",
+                "3. Crimes contra a pessoa",
+                "4. Crimes contra a liberdade pessoal",
+                "5. Crimes contra o patrimônio",
+                "6. Crimes contra a dignidade sexual",
+                "7. Crimes contra a paz pública",
+                "8. Crimes contra a administração pública"
+            ]},
+            { materia: "VI. Direito Processual Penal", topics: [
+                "1. Princípios do Processo Penal",
+                "2. Inquérito Policial",
+                "3. Da Prova e exame de corpo de delito",
+                "4. Da Prisão (arts. 283 a 309 CPP)",
+                "5. Lei das Contravenções Penais",
+                "6. Lei de Abuso de Autoridade (13.869/19)",
+                "7. ECA (dispositivos principais)",
+                "8. Lei de Racismo (7.716/89)",
+                "9. Estatuto da Pessoa com Deficiência",
+                "10. Crimes de Tortura",
+                "11. Estatuto do Idoso",
+                "12. Lei Maria da Penha",
+                "13. Lei de Drogas (11.343/06)"
+            ]},
+            { materia: "VI. Direito Penal Militar", topics: [
+                "1. Crimes contra a autoridade ou disciplina militar",
+                "2. Crimes contra o serviço e o dever militar (deserção, abandono de posto, embriaguez, dormir em serviço)",
+                "3. Crimes contra a Administração Militar (desacato e desobediência)"
+            ]},
+            { materia: "VI. Direito Processual Penal Militar", topics: [
+                "1. Inquérito Policial Militar",
+                "2. Prisão em flagrante",
+                "3. Processo de deserção (oficial e praça)"
+            ]}
+        ];
+
+        // ========== CRONOGRAMA ==========
+        let cronogramaData = JSON.parse(localStorage.getItem('oficializa_cronograma') || '{}');
+        let cronoCurrentDate = new Date();
+
+        function saveCronograma() {
+            localStorage.setItem('oficializa_cronograma', JSON.stringify(cronogramaData));
+        }
+
+        function formatDateKey(d) {
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${y}-${m}-${day}`;
+        }
+
+        function populateCronoTopicSelect() {
+            const sel = document.getElementById('crono-topic-select');
+            if (!sel) return;
+            let html = '<option value="">Selecione o tópico do edital...</option>';
+            EDITAL_TOPICS.forEach(mat => {
+                html += `<optgroup label="${mat.materia}">`;
+                mat.topics.forEach(t => {
+                    html += `<option value="${mat.materia}||${t}">${t}</option>`;
+                });
+                html += `</optgroup>`;
+            });
+            sel.innerHTML = html;
+        }
+
+        window.renderCronograma = function() {
+            populateCronoTopicSelect();
+            const cal = document.getElementById('cronograma-calendar');
+            const label = document.getElementById('crono-month-label');
+            if (!cal || !label) return;
+
+            const year = cronoCurrentDate.getFullYear();
+            const month = cronoCurrentDate.getMonth();
+            const monthNames = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+            label.textContent = `${monthNames[month]} ${year}`;
+
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const startWeekday = firstDay.getDay(); // 0 = domingo
+            const daysInMonth = lastDay.getDate();
+
+            const weekdays = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+            let html = weekdays.map(w => `<div class="text-center text-[10px] font-bold text-slate-500 py-1">${w}</div>`).join('');
+
+            for (let i = 0; i < startWeekday; i++) {
+                html += `<div class="min-h-[72px] rounded-xl bg-transparent"></div>`;
+            }
+
+            const todayKey = formatDateKey(new Date());
+            for (let d = 1; d <= daysInMonth; d++) {
+                const dateObj = new Date(year, month, d);
+                const key = formatDateKey(dateObj);
+                const topics = cronogramaData[key] || [];
+                const isToday = key === todayKey;
+                const hasTopics = topics.length > 0;
+
+                html += `
+                    <div onclick="openCronoDay('${key}')" class="min-h-[72px] rounded-xl p-1.5 border cursor-pointer transition hover:border-amber-500/50 ${isToday ? 'border-amber-500 bg-amber-500/10' : hasTopics ? 'border-slate-700 bg-slate-950' : 'border-slate-800 bg-slate-950/50'}">
+                        <div class="text-[11px] font-bold ${isToday ? 'text-amber-400' : 'text-slate-400'} mb-1">${d}</div>
+                        <div class="space-y-0.5">
+                            ${topics.slice(0, 2).map(t => `<div class="text-[9px] leading-tight truncate px-1 py-0.5 rounded bg-amber-500/20 text-amber-300 font-semibold">${t.topic.split('–')[0].substring(0, 28)}</div>`).join('')}
+                            ${topics.length > 2 ? `<div class="text-[9px] text-slate-500 font-bold">+${topics.length - 2}</div>` : ''}
+                        </div>
+                    </div>`;
+            }
+            cal.innerHTML = html;
+
+            // Seta data de hoje no input
+            const dateInput = document.getElementById('crono-date-input');
+            if (dateInput && !dateInput.value) dateInput.value = todayKey;
+        };
+
+        window.changeCronoMonth = function(delta) {
+            cronoCurrentDate.setMonth(cronoCurrentDate.getMonth() + delta);
+            renderCronograma();
+        };
+
+        window.addTopicToCronograma = function() {
+            const sel = document.getElementById('crono-topic-select');
+            const dateInput = document.getElementById('crono-date-input');
+            if (!sel || !dateInput || !sel.value || !dateInput.value) {
+                alert('Selecione o tópico e a data.');
+                return;
+            }
+            const [materia, topic] = sel.value.split('||');
+            const key = dateInput.value;
+            if (!cronogramaData[key]) cronogramaData[key] = [];
+            // Evita duplicata
+            if (cronogramaData[key].some(t => t.topic === topic && t.materia === materia)) {
+                alert('Este tópico já está neste dia.');
+                return;
+            }
+            cronogramaData[key].push({ materia, topic, done: false });
+            saveCronograma();
+            renderCronograma();
+            openCronoDay(key);
+        };
+
+        window.openCronoDay = function(key) {
+            const box = document.getElementById('crono-day-detail');
+            const title = document.getElementById('crono-day-title');
+            const list = document.getElementById('crono-day-topics');
+            if (!box || !title || !list) return;
+
+            const topics = cronogramaData[key] || [];
+            const [y, m, d] = key.split('-');
+            title.textContent = `Estudos de ${d}/${m}/${y}`;
+            box.classList.remove('hidden');
+
+            if (topics.length === 0) {
+                list.innerHTML = `<p class="text-xs text-slate-500">Nenhum tópico neste dia. Use o formulário acima para adicionar.</p>`;
+                return;
+            }
+            list.innerHTML = topics.map((t, idx) => `
+                <div class="flex items-start justify-between gap-2 p-3 rounded-xl bg-slate-900 border border-slate-800">
+                    <div class="flex items-start gap-2">
+                        <input type="checkbox" ${t.done ? 'checked' : ''} onchange="toggleCronoTopicDone('${key}', ${idx})" class="mt-1 accent-amber-500 cursor-pointer" />
+                        <div>
+                            <span class="text-[10px] font-bold text-amber-400 uppercase block">${t.materia}</span>
+                            <span class="text-xs text-slate-200 ${t.done ? 'line-through opacity-60' : ''}">${t.topic}</span>
+                        </div>
+                    </div>
+                    <button onclick="removeCronoTopic('${key}', ${idx})" class="text-rose-400 hover:text-rose-300 text-xs font-bold cursor-pointer shrink-0">Remover</button>
+                </div>
+            `).join('');
+        };
+
+        window.closeCronoDayDetail = function() {
+            const box = document.getElementById('crono-day-detail');
+            if (box) box.classList.add('hidden');
+        };
+
+        window.toggleCronoTopicDone = function(key, idx) {
+            if (cronogramaData[key] && cronogramaData[key][idx]) {
+                cronogramaData[key][idx].done = !cronogramaData[key][idx].done;
+                saveCronograma();
+                openCronoDay(key);
+                renderCronograma();
+            }
+        };
+
+        window.removeCronoTopic = function(key, idx) {
+            if (!cronogramaData[key]) return;
+            cronogramaData[key].splice(idx, 1);
+            if (cronogramaData[key].length === 0) delete cronogramaData[key];
+            saveCronograma();
+            openCronoDay(key);
+            renderCronograma();
+        };
+
+        window.clearCronograma = function() {
+            if (!confirm('Deseja limpar todo o cronograma?')) return;
+            cronogramaData = {};
+            saveCronograma();
+            renderCronograma();
+            closeCronoDayDetail();
+        };
+
+        // Gera cronograma pela Curva do Esquecimento (Ebbinghaus)
+        // Intervalos clássicos: 1 dia, 3 dias, 7 dias, 14 dias, 30 dias
+        window.generateForgettingCurveSchedule = function() {
+            const hours = parseInt(document.getElementById('crono-hours-per-day')?.value || '2', 10);
+            const daysPerWeek = parseInt(document.getElementById('crono-days-per-week')?.value || '5', 10);
+            const weeks = parseInt(document.getElementById('crono-weeks')?.value || '8', 10);
+
+            if (!confirm(`Gerar cronograma automático?\n\n• ${hours}h/dia\n• ${daysPerWeek} dias/semana\n• ${weeks} semanas\n• Com revisões pela Curva do Esquecimento\n\nIsso substituirá o cronograma atual.`)) return;
+
+            cronogramaData = {};
+            const allTopics = [];
+            EDITAL_TOPICS.forEach(mat => {
+                mat.topics.forEach(t => allTopics.push({ materia: mat.materia, topic: t }));
+            });
+
+            // Distribui tópicos novos nos dias de estudo
+            const start = new Date();
+            start.setHours(0,0,0,0);
+            const studyDays = [];
+            let cursor = new Date(start);
+            const maxDays = weeks * 7;
+            while (studyDays.length < maxDays) {
+                const dow = cursor.getDay(); // 0=dom
+                // Se 5 dias: seg-sex (1-5); 6: seg-sab; 7: todos
+                let isStudyDay = false;
+                if (daysPerWeek >= 7) isStudyDay = true;
+                else if (daysPerWeek === 6) isStudyDay = dow !== 0;
+                else isStudyDay = dow >= 1 && dow <= 5;
+
+                if (isStudyDay) studyDays.push(new Date(cursor));
+                cursor.setDate(cursor.getDate() + 1);
+                if (studyDays.length > weeks * daysPerWeek + 5) break;
+            }
+
+            // Quantos tópicos novos por dia de estudo (aprox)
+            const topicsPerDay = Math.max(1, Math.ceil(allTopics.length / Math.max(1, studyDays.length * 0.6)));
+            let topicIdx = 0;
+
+            // Intervalos de revisão (dias após o estudo inicial)
+            const reviewIntervals = [1, 3, 7, 14, 30];
+
+            studyDays.forEach((day, dayIdx) => {
+                const key = formatDateKey(day);
+                if (!cronogramaData[key]) cronogramaData[key] = [];
+
+                // Novos tópicos
+                for (let i = 0; i < topicsPerDay && topicIdx < allTopics.length; i++) {
+                    const t = allTopics[topicIdx++];
+                    cronogramaData[key].push({
+                        materia: t.materia,
+                        topic: t.topic,
+                        done: false,
+                        type: 'novo'
+                    });
+
+                    // Agenda revisões pela curva
+                    reviewIntervals.forEach(interval => {
+                        const revDate = new Date(day);
+                        revDate.setDate(revDate.getDate() + interval);
+                        // Só agenda se cair em dia de estudo e dentro do prazo
+                        const revKey = formatDateKey(revDate);
+                        const revDow = revDate.getDay();
+                        let okDay = false;
+                        if (daysPerWeek >= 7) okDay = true;
+                        else if (daysPerWeek === 6) okDay = revDow !== 0;
+                        else okDay = revDow >= 1 && revDow <= 5;
+
+                        const endLimit = new Date(start);
+                        endLimit.setDate(endLimit.getDate() + weeks * 7);
+                        if (okDay && revDate <= endLimit) {
+                            if (!cronogramaData[revKey]) cronogramaData[revKey] = [];
+                            // Evita duplicar a mesma revisão
+                            if (!cronogramaData[revKey].some(x => x.topic === t.topic && x.type === 'revisao')) {
+                                cronogramaData[revKey].push({
+                                    materia: t.materia,
+                                    topic: `🔄 Revisão: ${t.topic}`,
+                                    done: false,
+                                    type: 'revisao'
+                                });
+                            }
+                        }
+                    });
+                }
+            });
+
+            saveCronograma();
+            cronoCurrentDate = new Date(start);
+            renderCronograma();
+            alert(`Cronograma gerado!\n\n${topicIdx} tópicos distribuídos com revisões espaçadas (1, 3, 7, 14 e 30 dias).\nVocê pode editar qualquer dia manualmente.`);
         };
 
         window.addEventListener('DOMContentLoaded', initApp);
