@@ -490,7 +490,7 @@
         let currentUser = null;
         let rankingUnsubscribe = null;
         let avisosUnsubscribe = null;
-        const OWNER_EMAIL = "d_mob580@hotmail.com";
+        const OWNER_EMAILS = ["d_mob580@hotmail.com", "sntjoca@gmail.com"];
         let authCurrentMode = 'login'; // 'login' ou 'register'
 
         let defaultSimulados = [
@@ -559,6 +559,18 @@
         let timerSeconds = 0;
         let timerInterval = null;
         let isTimerRunning = true;
+
+        function checkAdminPrivileges() {
+            const adminBtn = document.getElementById('admin-trigger-btn');
+            if (!adminBtn) return;
+            const userEmail = (currentUser?.email || "").toLowerCase().trim();
+            const isOwner = OWNER_EMAILS.some(email => email.toLowerCase().trim() === userEmail);
+            if (isOwner) {
+                adminBtn.classList.remove('hidden');
+            } else {
+                adminBtn.classList.add('hidden');
+            }
+        }
 
         async function initApp() {
             try {
@@ -1252,8 +1264,10 @@
         }
 
         window.openAdminModal = function() {
-            if (currentUser && currentUser.email && currentUser.email.toLowerCase() !== OWNER_EMAIL.toLowerCase()) {
-                alert("Acesso restrito ao proprietário da plataforma.");
+            const userEmail = (currentUser?.email || "").toLowerCase().trim();
+            const isOwner = OWNER_EMAILS.some(email => email.toLowerCase().trim() === userEmail);
+            if (currentUser && currentUser.email && !isOwner) {
+                alert("Acesso restrito aos proprietários da plataforma.");
                 return;
             }
             document.getElementById('admin-modal').classList.remove('hidden');
