@@ -494,11 +494,60 @@
                 </div>
             </div>
 
-            <!-- Matérias expansíveis -->
+            <!-- Cards de barras por disciplina -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div class="bg-slate-900 rounded-2xl p-5 border border-slate-800 space-y-4">
+                    <h4 class="text-[11px] font-black uppercase tracking-wider text-slate-400">Desempenho por Disciplina</h4>
+                    <div id="metrics-bars-performance" class="space-y-3">
+                        <p class="text-xs text-slate-500 text-center py-4">Sem dados ainda</p>
+                    </div>
+                </div>
+                <div class="bg-slate-900 rounded-2xl p-5 border border-slate-800 space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h4 class="text-[11px] font-black uppercase tracking-wider text-slate-400">Avanço no Edital por Disciplina</h4>
+                        <span class="text-[10px] text-slate-500">Acumulado</span>
+                    </div>
+                    <div id="metrics-bars-progress" class="space-y-3">
+                        <p class="text-xs text-slate-500 text-center py-4">Sem dados ainda</p>
+                    </div>
+                </div>
+                <div class="bg-slate-900 rounded-2xl p-5 border border-slate-800 space-y-4">
+                    <h4 class="text-[11px] font-black uppercase tracking-wider text-slate-400">Questões por Disciplina</h4>
+                    <div id="metrics-bars-questions" class="space-y-3">
+                        <p class="text-xs text-slate-500 text-center py-4">Sem dados ainda</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabela desempenho por tópico -->
             <div class="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden">
                 <div class="px-5 py-4 border-b border-slate-800">
-                    <h4 class="text-sm font-black text-white">Desempenho por matéria</h4>
-                    <p class="text-[11px] text-slate-400 mt-0.5">Clique na matéria para expandir os assuntos do edital</p>
+                    <h4 class="text-sm font-black text-white">Desempenho por tópico</h4>
+                    <p class="text-[11px] text-slate-400 mt-0.5">Todos os tópicos com questões respondidas</p>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead>
+                            <tr class="border-b border-slate-800 text-[10px] uppercase tracking-wider text-slate-500 bg-slate-950/80">
+                                <th class="py-3 px-4 font-bold">Disciplina</th>
+                                <th class="py-3 px-4 font-bold">Tópico</th>
+                                <th class="py-3 px-4 font-bold text-center">Questões</th>
+                                <th class="py-3 px-4 font-bold text-center">Desempenho</th>
+                                <th class="py-3 px-4 font-bold text-center">Acertos</th>
+                            </tr>
+                        </thead>
+                        <tbody id="metrics-topics-tbody" class="divide-y divide-slate-800">
+                            <tr><td colspan="5" class="py-8 text-center text-slate-500 text-xs">Responda questões para ver o desempenho por tópico.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Matérias expansíveis (edital) -->
+            <div class="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden">
+                <div class="px-5 py-4 border-b border-slate-800">
+                    <h4 class="text-sm font-black text-white">Edital por matéria</h4>
+                    <p class="text-[11px] text-slate-400 mt-0.5">Clique na matéria para expandir os assuntos e ver quantas questões foram respondidas em cada subtópico</p>
                 </div>
                 <div id="metrics-materias-accordion" class="divide-y divide-slate-800">
                     <!-- Preenchido via JS -->
@@ -1785,6 +1834,7 @@
             let totalAnsweredGlobal = 0;
             let totalCorrectGlobal = 0;
             let totalWrongGlobal = 0;
+            let topicRows = [];
 
             allSimulados.forEach(sim => {
                 const cat = normalizeMateriaName(sim.category || "Geral");
@@ -1816,6 +1866,16 @@
                 });
             });
 
+            Object.entries(statsByCat).forEach(([cat, data]) => {
+                Object.entries(data.topics).forEach(([topic, t]) => {
+                    if (t.answered > 0) {
+                        const pct = Math.round((t.correct / t.answered) * 100);
+                        topicRows.push({ cat, topic, answered: t.answered, correct: t.correct, wrong: t.wrong, pct, total: t.total });
+                    }
+                });
+            });
+            topicRows.sort((a, b) => a.pct - b.pct);
+
             const globalPct = totalAnsweredGlobal > 0 ? Math.round((totalCorrectGlobal / totalAnsweredGlobal) * 100) : 0;
             const elPct = document.getElementById('metrics-global-pct');
             const elTotal = document.getElementById('metrics-global-total');
@@ -1826,15 +1886,107 @@
             if (elCorr) elCorr.textContent = totalCorrectGlobal;
             if (elWrong) elWrong.textContent = totalWrongGlobal;
 
+            const catList = Object.entries(statsByCat)
+                .filter(([, d]) => d.answered > 0 || d.total > 0)
+                .map(([name, d]) => ({
+                    name,
+                    answered: d.answered,
+                    correct: d.correct,
+                    wrong: d.wrong,
+                    total: d.total,
+                    pct: d.answered > 0 ? Math.round((d.correct / d.answered) * 100) : 0,
+                    progress: d.total > 0 ? Math.round((d.answered / d.total) * 100) : 0
+                }));
+
+            const barColors = ['#34d399','#60a5fa','#a78bfa','#fbbf24','#fb7185','#2dd4bf','#f472b6','#94a3b8'];
+
+            // Barras: Desempenho
+            const perfEl = document.getElementById('metrics-bars-performance');
+            if (perfEl) {
+                const sorted = [...catList].filter(c => c.answered > 0).sort((a, b) => b.pct - a.pct);
+                perfEl.innerHTML = sorted.length === 0
+                    ? `<p class="text-xs text-slate-500 text-center py-4">Sem dados ainda</p>`
+                    : sorted.slice(0, 8).map((c, i) => `
+                        <div class="space-y-1">
+                            <div class="flex items-center justify-between text-xs">
+                                <span class="font-semibold text-slate-300 truncate pr-2">${c.name}</span>
+                                <span class="font-black text-emerald-400 shrink-0">${c.pct}%</span>
+                            </div>
+                            <div class="w-full h-2.5 rounded-full bg-slate-800 overflow-hidden">
+                                <div class="h-full rounded-full transition-all duration-500" style="width:${c.pct}%;background:${barColors[i % barColors.length]}"></div>
+                            </div>
+                        </div>`).join('');
+            }
+
+            // Barras: Avanço no edital
+            const progEl = document.getElementById('metrics-bars-progress');
+            if (progEl) {
+                const sorted = [...catList].sort((a, b) => b.progress - a.progress);
+                progEl.innerHTML = sorted.length === 0
+                    ? `<p class="text-xs text-slate-500 text-center py-4">Sem dados ainda</p>`
+                    : sorted.slice(0, 8).map((c) => `
+                        <div class="space-y-1">
+                            <div class="flex items-center justify-between text-xs">
+                                <span class="font-semibold text-slate-300 truncate pr-2">${c.name}</span>
+                                <span class="font-black text-emerald-400 shrink-0">${c.progress}%</span>
+                            </div>
+                            <div class="w-full h-2.5 rounded-full bg-slate-800 overflow-hidden">
+                                <div class="h-full rounded-full bg-emerald-400 transition-all duration-500" style="width:${c.progress}%"></div>
+                            </div>
+                        </div>`).join('');
+            }
+
+            // Barras: Questões
+            const qEl = document.getElementById('metrics-bars-questions');
+            if (qEl) {
+                const sorted = [...catList].filter(c => c.answered > 0).sort((a, b) => b.answered - a.answered);
+                const maxQ = sorted.length ? sorted[0].answered : 1;
+                qEl.innerHTML = sorted.length === 0
+                    ? `<p class="text-xs text-slate-500 text-center py-4">Sem dados ainda</p>`
+                    : sorted.slice(0, 8).map((c, i) => {
+                        const w = Math.round((c.answered / maxQ) * 100);
+                        return `
+                        <div class="space-y-1">
+                            <div class="flex items-center justify-between text-xs">
+                                <span class="font-semibold text-slate-300 truncate pr-2">${c.name}</span>
+                                <span class="font-black text-amber-400 shrink-0">${c.answered} q.</span>
+                            </div>
+                            <div class="w-full h-2.5 rounded-full bg-slate-800 overflow-hidden">
+                                <div class="h-full rounded-full transition-all duration-500" style="width:${w}%;background:${barColors[i % barColors.length]}"></div>
+                            </div>
+                        </div>`;
+                    }).join('');
+            }
+
+            // Tabela por tópico
+            const tbody = document.getElementById('metrics-topics-tbody');
+            if (tbody) {
+                if (topicRows.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-slate-500 text-xs">Responda questões para ver o desempenho por tópico.</td></tr>`;
+                } else {
+                    tbody.innerHTML = topicRows.map(r => {
+                        let badgeCls = 'bg-emerald-500/20 text-emerald-400';
+                        if (r.pct < 50) badgeCls = 'bg-rose-500/20 text-rose-400';
+                        else if (r.pct < 70) badgeCls = 'bg-amber-500/20 text-amber-400';
+                        const warn = r.pct < 50 ? '⚠️ ' : '';
+                        return `
+                        <tr class="hover:bg-slate-950/60 transition">
+                            <td class="py-3 px-4 text-xs font-semibold text-slate-300 whitespace-nowrap">${r.cat}</td>
+                            <td class="py-3 px-4 text-xs text-slate-200">${warn}${r.topic}</td>
+                            <td class="py-3 px-4 text-xs text-center font-bold text-slate-300">${r.answered}</td>
+                            <td class="py-3 px-4 text-center"><span class="px-2 py-0.5 rounded-full text-[11px] font-black ${badgeCls}">${r.pct}%</span></td>
+                            <td class="py-3 px-4 text-xs text-center text-slate-400">${r.correct}/${r.answered}</td>
+                        </tr>`;
+                    }).join('');
+                }
+            }
+
+            // Accordion por matéria do edital
             const accordion = document.getElementById('metrics-materias-accordion');
             if (!accordion) return;
 
-            // Usa EDITAL_TOPICS como estrutura base; mescla stats reais
             const materias = (typeof EDITAL_TOPICS !== 'undefined' ? EDITAL_TOPICS : []).map(m => m.materia);
-            // Inclui categorias que existam nos simulados mas não no edital
-            Object.keys(statsByCat).forEach(c => {
-                if (!materias.includes(c)) materias.push(c);
-            });
+            Object.keys(statsByCat).forEach(c => { if (!materias.includes(c)) materias.push(c); });
 
             if (materias.length === 0) {
                 accordion.innerHTML = `<p class="text-xs text-slate-500 text-center py-8">Nenhuma matéria disponível.</p>`;
@@ -1846,7 +1998,6 @@
                 const stats = statsByCat[matName] || { answered: 0, correct: 0, wrong: 0, total: 0, topics: {} };
                 const pct = stats.answered > 0 ? Math.round((stats.correct / stats.answered) * 100) : null;
 
-                // Status badge da matéria
                 let matBadge = '';
                 if (stats.answered === 0) {
                     matBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold border border-slate-600 text-slate-400">Não iniciado</span>`;
@@ -1856,19 +2007,15 @@
                     matBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30">Em andamento · ${pct}%</span>`;
                 }
 
-                // Tópicos: preferir lista do edital; completar com os que têm stats
                 let topicList = [];
                 if (editalMat) {
                     topicList = editalMat.topics.map(t => {
-                        // Match aproximado com stats
                         let matched = null;
                         Object.entries(stats.topics).forEach(([k, v]) => {
                             if (matched) return;
                             const kLow = k.toLowerCase();
                             const tLow = t.toLowerCase();
-                            if (kLow.includes(tLow.slice(0, 20)) || tLow.includes(kLow.slice(0, 20)) || kLow === tLow) {
-                                matched = v;
-                            }
+                            if (kLow.includes(tLow.slice(0, 20)) || tLow.includes(kLow.slice(0, 20)) || kLow === tLow) matched = v;
                         });
                         return { name: t, stats: matched || { answered: 0, correct: 0, wrong: 0, total: 0 } };
                     });
@@ -1880,7 +2027,7 @@
                     const s = tp.stats;
                     let badge = '';
                     if (s.answered === 0) {
-                        badge = `<span class="text-[10px] text-slate-500">—</span>`;
+                        badge = `<span class="text-[10px] text-slate-500">0 questões</span>`;
                     } else {
                         const p = Math.round((s.correct / s.answered) * 100);
                         if (p >= 70) {
@@ -1891,11 +2038,13 @@
                             badge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/15 text-rose-400 border border-rose-500/30">${p}%</span>`;
                         }
                     }
-                    const qInfo = s.answered > 0 ? `<span class="text-[10px] text-slate-500">${s.correct}/${s.answered} acertos</span>` : '';
+                    const qInfo = s.answered > 0
+                        ? `<span class="text-[10px] text-slate-400 font-semibold">${s.answered} questões · ${s.correct} acertos</span>`
+                        : `<span class="text-[10px] text-slate-500">0 questões</span>`;
                     return `
                         <div class="flex items-center justify-between gap-3 py-2.5 px-3 rounded-xl hover:bg-slate-950/60 transition">
                             <span class="text-xs text-slate-300 leading-snug flex-1">${tp.name}</span>
-                            <div class="flex items-center gap-2 shrink-0">
+                            <div class="flex items-center gap-2 shrink-0 flex-wrap justify-end">
                                 ${qInfo}
                                 ${badge}
                             </div>
@@ -1906,7 +2055,7 @@
                     <div class="metrics-materia-item" data-idx="${idx}">
                         <button type="button" onclick="toggleMateriaAccordion(${idx})" class="w-full flex items-center justify-between gap-3 px-5 py-4 text-left hover:bg-slate-950/50 transition cursor-pointer">
                             <div class="flex items-center gap-3 min-w-0">
-                                <span id="materia-chevron-${idx}" class="text-slate-500 text-xs transition-transform">▶</span>
+                                <span id="materia-chevron-${idx}" class="text-slate-500 text-xs">▶</span>
                                 <div class="min-w-0">
                                     <span class="text-sm font-bold text-white block truncate">${matName}</span>
                                     <span class="text-[10px] text-slate-500">${stats.answered} questões respondidas${stats.total ? ' · ' + stats.total + ' disponíveis' : ''}</span>
@@ -1928,12 +2077,11 @@
             const chevron = document.getElementById(`materia-chevron-${idx}`);
             if (!panel) return;
             const isHidden = panel.classList.contains('hidden');
-            // Fecha os outros (opcional - accordion single open)
             document.querySelectorAll('[id^="materia-panel-"]').forEach(p => p.classList.add('hidden'));
-            document.querySelectorAll('[id^="materia-chevron-"]').forEach(c => { c.textContent = '▶'; c.classList.remove('rotate-90'); });
+            document.querySelectorAll('[id^="materia-chevron-"]').forEach(c => { c.textContent = '▶'; });
             if (isHidden) {
                 panel.classList.remove('hidden');
-                if (chevron) { chevron.textContent = '▼'; }
+                if (chevron) chevron.textContent = '▼';
             }
         };
 
