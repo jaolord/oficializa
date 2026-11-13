@@ -20,6 +20,65 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <style>
+        /* ===== MODO CLARO (Light Mode) ===== */
+        html.light body {
+            background-color: #f1f5f9 !important;
+            color: #0f172a !important;
+        }
+        html.light header {
+            background-color: rgba(255,255,255,0.92) !important;
+            border-color: #e2e8f0 !important;
+        }
+        html.light #view-home .bg-slate-900,
+        html.light #view-quiz .bg-slate-900,
+        html.light .bg-slate-900 {
+            background-color: #ffffff !important;
+            border-color: #e2e8f0 !important;
+        }
+        html.light .bg-slate-950 {
+            background-color: #f8fafc !important;
+        }
+        html.light .bg-slate-800 {
+            background-color: #e2e8f0 !important;
+        }
+        html.light .text-white {
+            color: #0f172a !important;
+        }
+        html.light .text-slate-300,
+        html.light .text-slate-200,
+        html.light .text-slate-400 {
+            color: #475569 !important;
+        }
+        html.light .border-slate-800,
+        html.light .border-slate-700 {
+            border-color: #e2e8f0 !important;
+        }
+        html.light input,
+        html.light textarea,
+        html.light select {
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+            border-color: #cbd5e1 !important;
+        }
+        html.light #auth-modal .bg-slate-900,
+        html.light #admin-modal .bg-slate-900,
+        html.light #profile-modal .bg-slate-900,
+        html.light #notifications-modal .bg-slate-900 {
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+        }
+        html.light .bg-slate-950\/80,
+        html.light .bg-slate-950\/90 {
+            background-color: rgba(241, 245, 249, 0.9) !important;
+        }
+        /* Mantém botões amber e destaques intactos */
+        html.light .text-amber-400 {
+            color: #d97706 !important;
+        }
+    </style>
+
 </head>
 <body class="bg-slate-950 text-slate-100 font-sans antialiased min-h-screen flex flex-col selection:bg-amber-500 selection:text-slate-950">
 
@@ -101,6 +160,12 @@
             </div>
 
             <div class="flex items-center gap-3">
+                <!-- Botão Tema Claro / Escuro -->
+                <button id="theme-toggle-btn" onclick="toggleTheme()" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition cursor-pointer" title="Alternar tema claro/escuro">
+                    <svg id="theme-icon-sun" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    <svg id="theme-icon-moon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                </button>
+
                 <!-- Ícone de Notificações com Badge -->
                 <div class="relative">
                     <button onclick="openNotificationsModal()" class="relative p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition cursor-pointer" title="Avisos e Notificações">
@@ -345,7 +410,7 @@
     <!-- =========================================================
          MODAL DE PERFIL / ALTERAR NOME
          ========================================================= -->
-    <div id="profile-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/80 backdrop-blur-md p-4">
+    <div id="profile-modal" class="fixed inset-0 z-50 hidden items-start sm:items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 overflow-y-auto">
         <div class="bg-slate-900 rounded-3xl max-w-md w-full p-6 sm:p-7 border border-slate-800 shadow-2xl text-white">
             <div class="flex items-center justify-between mb-5 pb-3 border-b border-slate-800">
                 <div class="flex items-center gap-3">
@@ -372,7 +437,7 @@
     <!-- =========================================================
          MODAL DE NOTIFICAÇÕES E AVISOS
          ========================================================= -->
-    <div id="notifications-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/80 backdrop-blur-md p-4">
+    <div id="notifications-modal" class="fixed inset-0 z-50 hidden items-start sm:items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 overflow-y-auto">
         <div class="bg-slate-900 rounded-3xl max-w-lg w-full p-6 sm:p-7 border border-slate-800 shadow-2xl text-white">
             <div class="flex items-center justify-between mb-5 pb-3 border-b border-slate-800">
                 <div class="flex items-center gap-3">
@@ -393,9 +458,9 @@
     <!-- =========================================================
          MODAL DO PAINEL DO CRIADOR (ADMIN)
          ========================================================= -->
-    <div id="admin-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 overflow-y-auto">
-        <div class="bg-slate-900 rounded-3xl max-w-3xl w-full p-6 sm:p-8 border border-amber-500/50 shadow-2xl text-white my-8">
-            <div class="flex items-center justify-between mb-6 pb-4 border-b border-slate-800">
+    <div id="admin-modal" class="fixed inset-0 z-50 hidden items-start justify-center bg-slate-950/80 backdrop-blur-md p-4 overflow-y-auto">
+        <div class="bg-slate-900 rounded-3xl max-w-3xl w-full p-6 sm:p-8 border border-amber-500/50 shadow-2xl text-white my-4 sm:my-8 relative">
+            <div class="sticky top-0 z-10 bg-slate-900 -mx-6 sm:-mx-8 px-6 sm:px-8 pt-0 pb-4 mb-6 border-b border-slate-800 flex items-center justify-between">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold">⚙️</div>
                     <div>
@@ -433,7 +498,7 @@
                             <label class="block text-xs font-bold uppercase tracking-wider text-amber-400">Conteúdo (Cole o código HTML completo do simulado ou o JSON de questões)</label>
                             <span class="text-[10px] text-slate-400">Extração inteligente automática de HTML</span>
                         </div>
-                        <textarea id="admin-json" rows="6" required class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-800 text-emerald-400 font-mono text-xs focus:border-amber-500 focus:outline-none" placeholder='Cole o código HTML completo da página ou o vetor JSON [...]'></textarea>
+                        <textarea id="admin-json" rows="12" required class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-800 text-emerald-400 font-mono text-xs focus:border-amber-500 focus:outline-none" placeholder='Cole o código HTML completo da página ou o vetor JSON [...]'></textarea>
                     </div>
                     <div class="flex justify-end gap-3 pt-2">
                         <button type="button" onclick="resetAdminForm()" class="px-4 py-2.5 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold cursor-pointer">Novo</button>
@@ -517,6 +582,42 @@
         let avisosUnsubscribe = null;
         let commentsUnsubscribe = null;
         const OWNER_EMAILS = ["d_mob580@hotmail.com", "sntjoca@gmail.com"];
+        // ========== TEMA CLARO / ESCURO ==========
+        function applyTheme(theme) {
+            const html = document.documentElement;
+            const sun = document.getElementById('theme-icon-sun');
+            const moon = document.getElementById('theme-icon-moon');
+            if (theme === 'light') {
+                html.classList.remove('dark');
+                html.classList.add('light');
+                document.body.classList.remove('bg-slate-950', 'text-slate-100');
+                document.body.classList.add('bg-slate-100', 'text-slate-900');
+                if (sun) sun.classList.remove('hidden');
+                if (moon) moon.classList.add('hidden');
+                localStorage.setItem('oficializa_theme', 'light');
+            } else {
+                html.classList.add('dark');
+                html.classList.remove('light');
+                document.body.classList.add('bg-slate-950', 'text-slate-100');
+                document.body.classList.remove('bg-slate-100', 'text-slate-900');
+                if (sun) sun.classList.add('hidden');
+                if (moon) moon.classList.remove('hidden');
+                localStorage.setItem('oficializa_theme', 'dark');
+            }
+        }
+
+        window.toggleTheme = function() {
+            const current = localStorage.getItem('oficializa_theme') || 'dark';
+            applyTheme(current === 'dark' ? 'light' : 'dark');
+        };
+
+        // Aplica tema salvo ao carregar
+        (function() {
+            const saved = localStorage.getItem('oficializa_theme') || 'dark';
+            // Aplica após um tick para garantir que os ícones existam
+            setTimeout(() => applyTheme(saved), 50);
+        })();
+
         let authCurrentMode = 'login';
         let candidateNameStorage = localStorage.getItem('oficializa_candidate_name') || "";
 
@@ -993,13 +1094,22 @@
                             ` : ''}
                         </div>
                     ` : ''}
-                    <div class="pt-4 border-t border-slate-800 space-y-4">
-                        <h6 class="text-xs font-bold uppercase tracking-wider text-slate-400">Comentários e Dúvidas</h6>
-                        <div class="space-y-2 max-h-48 overflow-y-auto">${commentsHtml || '<p class="text-xs text-slate-500">Nenhum comentário ainda. Seja o primeiro a comentar!</p>'}</div>
-                        <form onsubmit="handlePostComment(event, ${q.id})" class="flex gap-2">
-                            <input type="text" id="comment-input-${q.id}" required placeholder="Deixe seu comentário ou dúvida..." class="flex-1 px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:border-amber-500 focus:outline-none" />
-                            <button type="submit" class="px-4 py-2.5 rounded-xl bg-amber-500 text-slate-950 text-xs font-black hover:bg-amber-400 transition cursor-pointer">Comentar</button>
-                        </form>
+                    <div class="pt-4 border-t border-slate-800 space-y-3">
+                        <button type="button" onclick="toggleComments(${q.id})" id="toggle-comments-btn-${q.id}" class="w-full flex items-center justify-between px-4 py-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-slate-300 transition cursor-pointer">
+                            <span class="flex items-center gap-2">
+                                <span>💬</span>
+                                <span>Comentários e Dúvidas</span>
+                                <span class="px-1.5 py-0.5 rounded bg-slate-700 text-[10px] font-black">${(questionComments[q.id] || []).length}</span>
+                            </span>
+                            <span id="toggle-comments-icon-${q.id}" class="text-amber-400">▼</span>
+                        </button>
+                        <div id="comments-panel-${q.id}" class="hidden space-y-4">
+                            <div class="space-y-2 max-h-48 overflow-y-auto">${commentsHtml || '<p class="text-xs text-slate-500">Nenhum comentário ainda. Seja o primeiro a comentar!</p>'}</div>
+                            <form onsubmit="handlePostComment(event, ${q.id})" class="flex gap-2">
+                                <input type="text" id="comment-input-${q.id}" required placeholder="Deixe seu comentário ou dúvida..." class="flex-1 px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:border-amber-500 focus:outline-none" />
+                                <button type="submit" class="px-4 py-2.5 rounded-xl bg-amber-500 text-slate-950 text-xs font-black hover:bg-amber-400 transition cursor-pointer">Comentar</button>
+                            </form>
+                        </div>
                     </div>
                 `;
                 container.appendChild(card);
@@ -1119,6 +1229,21 @@
                 btnAll.className = "px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700 transition cursor-pointer";
             }
             renderQuizQuestions();
+        };
+
+
+        window.toggleComments = function(qId) {
+            const panel = document.getElementById(`comments-panel-${qId}`);
+            const icon = document.getElementById(`toggle-comments-icon-${qId}`);
+            if (!panel) return;
+            const isHidden = panel.classList.contains('hidden');
+            if (isHidden) {
+                panel.classList.remove('hidden');
+                if (icon) icon.textContent = '▲';
+            } else {
+                panel.classList.add('hidden');
+                if (icon) icon.textContent = '▼';
+            }
         };
 
         window.handlePostComment = async function(event, qId) {
