@@ -22,20 +22,29 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <style>
-        /* ===== MODO CLARO (Light Mode) ===== */
+        /* ===== MODO CLARO (Light Mode) - Contraste reforçado ===== */
         html.light body {
             background-color: #f1f5f9 !important;
             color: #0f172a !important;
         }
         html.light header {
-            background-color: rgba(255,255,255,0.92) !important;
+            background-color: rgba(255,255,255,0.95) !important;
             border-color: #e2e8f0 !important;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08) !important;
         }
-        html.light #view-home .bg-slate-900,
-        html.light #view-quiz .bg-slate-900,
+        html.light header .text-white {
+            color: #0f172a !important;
+        }
+        html.light header .text-slate-300,
+        html.light header .text-slate-400 {
+            color: #475569 !important;
+        }
+
+        /* Cards e containers principais */
         html.light .bg-slate-900 {
             background-color: #ffffff !important;
             border-color: #e2e8f0 !important;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06) !important;
         }
         html.light .bg-slate-950 {
             background-color: #f8fafc !important;
@@ -43,18 +52,38 @@
         html.light .bg-slate-800 {
             background-color: #e2e8f0 !important;
         }
+        html.light .bg-slate-950\/80,
+        html.light .bg-slate-950\/90 {
+            background-color: rgba(248, 250, 252, 0.95) !important;
+        }
+
+        /* Textos - alto contraste */
         html.light .text-white {
             color: #0f172a !important;
         }
-        html.light .text-slate-300,
-        html.light .text-slate-200,
-        html.light .text-slate-400 {
+        html.light .text-slate-100 {
+            color: #1e293b !important;
+        }
+        html.light .text-slate-200 {
+            color: #334155 !important;
+        }
+        html.light .text-slate-300 {
             color: #475569 !important;
         }
+        html.light .text-slate-400 {
+            color: #64748b !important;
+        }
+        html.light .text-slate-500 {
+            color: #64748b !important;
+        }
+
+        /* Bordas */
         html.light .border-slate-800,
         html.light .border-slate-700 {
             border-color: #e2e8f0 !important;
         }
+
+        /* Inputs */
         html.light input,
         html.light textarea,
         html.light select {
@@ -62,20 +91,209 @@
             color: #0f172a !important;
             border-color: #cbd5e1 !important;
         }
+        html.light input::placeholder,
+        html.light textarea::placeholder {
+            color: #94a3b8 !important;
+        }
+
+        /* Modais */
         html.light #auth-modal .bg-slate-900,
         html.light #admin-modal .bg-slate-900,
         html.light #profile-modal .bg-slate-900,
         html.light #notifications-modal .bg-slate-900 {
             background-color: #ffffff !important;
             color: #0f172a !important;
+            border-color: #e2e8f0 !important;
         }
-        html.light .bg-slate-950\/80,
-        html.light .bg-slate-950\/90 {
-            background-color: rgba(241, 245, 249, 0.9) !important;
+        html.light #auth-modal,
+        html.light #admin-modal,
+        html.light #profile-modal,
+        html.light #notifications-modal {
+            background-color: rgba(15, 23, 42, 0.45) !important;
         }
-        /* Mantém botões amber e destaques intactos */
+
+        /* Banner principal da home - mantém visual escuro forte mesmo no modo claro */
+        html.light #home-hero-banner {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%) !important;
+            border-color: #f59e0b !important;
+        }
+        html.light #home-hero-banner .text-white {
+            color: #ffffff !important;
+        }
+        html.light #home-hero-banner .text-slate-300 {
+            color: #cbd5e1 !important;
+        }
+        html.light #home-hero-banner .text-amber-400 {
+            color: #fbbf24 !important;
+        }
+        html.light #home-hero-banner .bg-amber-500\/10 {
+            background-color: rgba(245, 158, 11, 0.15) !important;
+        }
+        html.light #home-hero-banner .border-amber-500\/30 {
+            border-color: rgba(245, 158, 11, 0.4) !important;
+        }
+        html.light #home-hero-banner button.bg-amber-500 {
+            background-color: #f59e0b !important;
+            color: #0f172a !important;
+        }
+
+        /* Destaques âmbar (mantém identidade) */
         html.light .text-amber-400 {
+            color: #b45309 !important;
+        }
+        html.light .text-amber-500 {
             color: #d97706 !important;
+        }
+        html.light .bg-amber-500\/10 {
+            background-color: rgba(245, 158, 11, 0.12) !important;
+        }
+        html.light .border-amber-500\/30,
+        html.light .border-amber-500\/20,
+        html.light .border-amber-500\/40 {
+            border-color: rgba(217, 119, 6, 0.35) !important;
+        }
+
+        /* Botões de ação (não alterar o âmbar principal) */
+        html.light .bg-amber-500 {
+            background-color: #f59e0b !important;
+            color: #0f172a !important;
+        }
+        html.light .bg-amber-500:hover,
+        html.light .hover\:bg-amber-400:hover {
+            background-color: #fbbf24 !important;
+        }
+
+        /* Questões - opções e cards */
+        html.light #quiz-questions-list .bg-slate-900 {
+            background-color: #ffffff !important;
+            border-color: #e2e8f0 !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06) !important;
+        }
+        html.light #quiz-questions-list .border-2 {
+            border-color: #cbd5e1 !important;
+        }
+        html.light #quiz-questions-list .text-sm,
+        html.light #quiz-questions-list .text-\[15px\] {
+            color: #1e293b !important;
+        }
+
+        /* Comentários */
+        html.light #toggle-comments-btn-\* ,
+        html.light [id^="toggle-comments-btn-"] {
+            background-color: #f1f5f9 !important;
+            border-color: #cbd5e1 !important;
+            color: #334155 !important;
+        }
+        html.light [id^="comments-panel-"] .bg-slate-950\/80 {
+            background-color: #f8fafc !important;
+            border-color: #e2e8f0 !important;
+        }
+
+        /* Badges e contadores */
+        html.light .bg-emerald-950\/80 {
+            background-color: #ecfdf5 !important;
+            border-color: #6ee7b7 !important;
+        }
+        html.light .bg-rose-950\/80 {
+            background-color: #fff1f2 !important;
+            border-color: #fda4af !important;
+        }
+        html.light .text-emerald-400 {
+            color: #059669 !important;
+        }
+        html.light .text-rose-400 {
+            color: #e11d48 !important;
+        }
+
+        /* Tabela de ranking */
+        html.light table thead {
+            background-color: #f8fafc !important;
+        }
+        html.light table th {
+            color: #64748b !important;
+        }
+        html.light table td {
+            color: #1e293b !important;
+        }
+        html.light .bg-amber-500\/10 {
+            background-color: rgba(245, 158, 11, 0.1) !important;
+        }
+
+        /* Floating timer */
+        html.light #floating-timer-widget {
+            background-color: #ffffff !important;
+            border-color: #f59e0b !important;
+            color: #0f172a !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+        }
+
+
+        /* Texto das questões e enunciados - máxima legibilidade */
+        html.light #quiz-questions-list h4,
+        html.light #quiz-questions-list h5,
+        html.light #quiz-questions-list p,
+        html.light #quiz-questions-list span {
+            color: #1e293b !important;
+        }
+        html.light #quiz-questions-list .text-amber-400 {
+            color: #b45309 !important;
+        }
+        html.light #quiz-questions-list .text-emerald-400 {
+            color: #047857 !important;
+        }
+        html.light #quiz-questions-list .text-rose-400 {
+            color: #be123c !important;
+        }
+        /* Alternativas selecionáveis */
+        html.light #quiz-questions-list button.border-2 {
+            background-color: #ffffff !important;
+            border-color: #cbd5e1 !important;
+            color: #1e293b !important;
+        }
+        html.light #quiz-questions-list button.border-2:hover {
+            border-color: #f59e0b !important;
+            background-color: #fffbeb !important;
+        }
+        /* Gabarito / explicação */
+        html.light #quiz-questions-list .bg-emerald-950\/80,
+        html.light #quiz-questions-list [class*="bg-emerald"] {
+            background-color: #ecfdf5 !important;
+            border-color: #6ee7b7 !important;
+        }
+        html.light #quiz-questions-list .bg-rose-950\/80,
+        html.light #quiz-questions-list [class*="bg-rose"] {
+            background-color: #fff1f2 !important;
+            border-color: #fda4af !important;
+        }
+        /* Catálogo de simulados */
+        html.light #simulados-grid .bg-slate-900 {
+            background-color: #ffffff !important;
+            border-color: #e2e8f0 !important;
+        }
+        html.light #simulados-grid .text-white {
+            color: #0f172a !important;
+        }
+        html.light #simulados-grid .text-slate-400,
+        html.light #simulados-grid .text-slate-300 {
+            color: #64748b !important;
+        }
+        /* Abas da home */
+        html.light #home-tab-catalog-btn.bg-amber-500,
+        html.light #home-tab-metrics-btn.bg-amber-500 {
+            background-color: #f59e0b !important;
+            color: #0f172a !important;
+        }
+        /* Métricas */
+        html.light #home-content-metrics .text-3xl {
+            color: inherit !important;
+        }
+        html.light #metrics-global-pct {
+            color: #0f172a !important;
+        }
+
+        /* Sticky header do admin no modo claro */
+        html.light #admin-modal .sticky {
+            background-color: #ffffff !important;
         }
     </style>
 
@@ -211,7 +429,7 @@
         <!-- CONTEÚDO 1: CATÁLOGO DE SIMULADOS -->
         <div id="home-content-catalog" class="space-y-8">
             <!-- Banner -->
-            <div class="relative rounded-3xl bg-gradient-to-r from-slate-900 via-slate-900 to-slate-800 border border-amber-500/30 p-6 sm:p-10 shadow-2xl overflow-hidden flex flex-col sm:flex-row items-center gap-6">
+            <div id="home-hero-banner" class="relative rounded-3xl bg-gradient-to-r from-slate-900 via-slate-900 to-slate-800 border border-amber-500/30 p-6 sm:p-10 shadow-2xl overflow-hidden flex flex-col sm:flex-row items-center gap-6">
                 <div class="w-24 h-24 sm:w-32 sm:h-32 rounded-2xl bg-amber-500/10 border border-amber-400/40 flex items-center justify-center shrink-0 overflow-hidden shadow-xl">
                     <img src="https://i.ibb.co/DHX2TX6t/Carcar-Oficializa-Treino-de-Elite.png" alt="OFICIALIZA" class="w-full h-full object-contain p-2" />
                 </div>
