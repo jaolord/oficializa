@@ -182,26 +182,49 @@
 
         <!-- CONTEÚDO 2: MÉTRICAS E DESEMPENHO POR MATÉRIA/ASSUNTO -->
         <div id="home-content-metrics" class="hidden space-y-8">
-            <div class="bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-800 shadow-xl space-y-6">
+            <div class="bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-800 shadow-xl space-y-8">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-6">
                     <div>
                         <span class="text-xs font-extrabold uppercase tracking-widest text-amber-400">Painel de Desempenho Estilo QConcursos</span>
                         <h3 class="text-xl sm:text-2xl font-black text-white mt-0.5">Estatísticas e Aproveitamento Detalhado</h3>
                         <p class="text-xs text-slate-400 mt-1">Acompanhe seu índice de acertos, erros e percentual exato por matéria e tópico do edital CFO PMBA.</p>
                     </div>
-                    <!-- Cards de Resumo Global Estilo QConcursos -->
-                    <div class="flex items-center gap-2 sm:gap-3 shrink-0 flex-wrap">
-                        <div class="bg-slate-950 px-4 py-3 rounded-2xl border border-slate-800 text-center">
-                            <span id="metrics-global-pct" class="text-2xl font-black text-amber-400 block">0%</span>
-                            <span class="text-[10px] uppercase font-bold text-slate-400">Aproveitamento</span>
+                </div>
+
+                <!-- Gráfico Estilo QConcursos & Cards de Resumo -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-center bg-slate-950 p-6 rounded-3xl border border-slate-800">
+                    <!-- Gráfico Donut Percentual de Rendimento -->
+                    <div class="flex flex-col items-center justify-center p-4 bg-slate-900 rounded-2xl border border-slate-800">
+                        <span class="text-xs font-black uppercase tracking-wider text-slate-400 mb-4">Percentual de Rendimento</span>
+                        <div class="relative w-40 h-40 flex items-center justify-center">
+                            <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                                <path id="metric-donut-wrong" class="text-rose-500" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke-width="4.5" stroke="currentColor"></path>
+                                <path id="metric-donut-correct" class="text-emerald-400" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke-width="4.5" stroke="currentColor"></path>
+                            </svg>
+                            <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+                                <span id="metrics-global-pct" class="text-2xl font-black text-white">0%</span>
+                                <span class="text-[9px] uppercase font-bold text-slate-400">Aproveitamento</span>
+                            </div>
                         </div>
-                        <div class="bg-slate-950 px-4 py-3 rounded-2xl border border-slate-800 text-center">
-                            <span id="metrics-global-correct" class="text-2xl font-black text-emerald-400 block">0</span>
-                            <span class="text-[10px] uppercase font-bold text-slate-400">Certas</span>
+                        <div class="flex items-center gap-4 mt-4 text-xs font-bold">
+                            <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-emerald-400"></span><span class="text-slate-300">Acertos</span></div>
+                            <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-rose-500"></span><span class="text-slate-300">Erros</span></div>
                         </div>
-                        <div class="bg-slate-950 px-4 py-3 rounded-2xl border border-slate-800 text-center">
-                            <span id="metrics-global-wrong" class="text-2xl font-black text-rose-400 block">0</span>
-                            <span class="text-[10px] uppercase font-bold text-slate-400">Erradas</span>
+                    </div>
+
+                    <!-- Cards de Totais Estilo QConcursos -->
+                    <div class="lg:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 text-center flex flex-col justify-center">
+                            <span id="metrics-global-total" class="text-3xl font-black text-amber-400 block mb-1">0</span>
+                            <span class="text-[11px] uppercase font-bold text-slate-400">Resoluções de Questões</span>
+                        </div>
+                        <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 text-center flex flex-col justify-center">
+                            <span id="metrics-global-correct" class="text-3xl font-black text-emerald-400 block mb-1">0</span>
+                            <span class="text-[11px] uppercase font-bold text-slate-400">Resoluções Corretas</span>
+                        </div>
+                        <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 text-center flex flex-col justify-center">
+                            <span id="metrics-global-wrong" class="text-3xl font-black text-rose-400 block mb-1">0</span>
+                            <span class="text-[11px] uppercase font-bold text-slate-400">Resoluções Erradas</span>
                         </div>
                     </div>
                 </div>
@@ -421,7 +444,7 @@
             </div>
 
             <!-- Aba 2: Avisos -->
-            <div id="admin-tab-avisos" class="hidden space-y-4">
+            <div id="admin-tab-avisos" class="hidden space-y-6">
                 <form onsubmit="handleSendAviso(event)" class="space-y-4 bg-slate-950 p-5 rounded-2xl border border-slate-800">
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Título do Aviso</label>
@@ -436,6 +459,11 @@
                         <button type="submit" class="px-5 py-2.5 rounded-xl bg-amber-500 text-slate-950 text-xs font-black hover:bg-amber-400 cursor-pointer">Emitir Aviso para Todos</button>
                     </div>
                 </form>
+
+                <div>
+                    <h4 class="text-sm font-black text-white mb-3">Gerenciar e Excluir Avisos Ativos</h4>
+                    <div id="admin-avisos-list" class="space-y-2 max-h-60 overflow-y-auto"></div>
+                </div>
             </div>
 
             <!-- Aba 3: Ranking -->
@@ -1142,6 +1170,12 @@
             const modal = document.getElementById('notifications-modal');
             modal.classList.remove('hidden');
             modal.classList.add('flex');
+            
+            // Marca todos como lidos e salva no localStorage para o badge sumir definitivamente
+            if (avisosList.length > 0) {
+                const latestId = avisosList[0].id || String(avisosList[0].time);
+                localStorage.setItem('oficializa_last_read_aviso', latestId);
+            }
             const badge = document.getElementById('notif-badge');
             if (badge) badge.classList.add('hidden');
         };
@@ -1159,13 +1193,18 @@
                 const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'avisos_globais');
                 avisosUnsubscribe = onSnapshot(colRef, (snap) => {
                     avisosList = [];
-                    snap.forEach(d => avisosList.push(d.data()));
+                    snap.forEach(d => avisosList.push({ id: d.id, ...d.data() }));
                     avisosList.sort((a, b) => b.time - a.time);
 
+                    const lastReadId = localStorage.getItem('oficializa_last_read_aviso');
+                    const hasUnread = avisosList.length > 0 && avisosList[0].id !== lastReadId;
+
                     const badge = document.getElementById('notif-badge');
-                    if (avisosList.length > 0 && badge && document.getElementById('notifications-modal').classList.contains('hidden')) {
+                    if (hasUnread && badge && document.getElementById('notifications-modal').classList.contains('hidden')) {
                         badge.textContent = avisosList.length;
                         badge.classList.remove('hidden');
+                    } else if (badge) {
+                        badge.classList.add('hidden');
                     }
 
                     const listEl = document.getElementById('notifications-list');
@@ -1184,6 +1223,8 @@
                             `).join('');
                         }
                     }
+
+                    renderAdminAvisosList();
                 }, (error) => {});
             } catch (e) {}
         }
@@ -1208,6 +1249,39 @@
                 document.getElementById('aviso-msg').value = "";
                 setTimeout(() => succBox.classList.add('hidden'), 3000);
             } catch (err) { alert("Erro: " + err.message); }
+        };
+
+        function renderAdminAvisosList() {
+            const listEl = document.getElementById('admin-avisos-list');
+            if (!listEl) return;
+            if (avisosList.length === 0) {
+                listEl.innerHTML = `<p class="text-xs text-slate-500 text-center py-4">Nenhum aviso cadastrado.</p>`;
+                return;
+            }
+            listEl.innerHTML = avisosList.map(av => `
+                <div class="flex items-center justify-between p-3 rounded-xl bg-slate-900 border border-slate-800 text-xs">
+                    <div>
+                        <span class="font-bold text-white block">${av.title}</span>
+                        <span class="text-[10px] text-slate-400">${new Date(av.time).toLocaleDateString()}</span>
+                    </div>
+                    <button onclick="deleteAvisoAdmin('${av.id}')" class="px-3 py-1.5 rounded-lg bg-rose-600/20 text-rose-400 font-bold cursor-pointer">Excluir</button>
+                </div>
+            `).join('');
+        }
+
+        window.deleteAvisoAdmin = async function(avisoId) {
+            const pass = document.getElementById('admin-pass').value;
+            if (pass !== "pmba2026") { alert("Senha administrativa incorreta!"); return; }
+            if (!confirm("Deseja excluir este aviso global?")) return;
+            try {
+                if (db) {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'avisos_globais', avisoId));
+                }
+                avisosList = avisosList.filter(a => a.id !== avisoId);
+                renderAdminAvisosList();
+            } catch (err) {
+                alert("Erro ao excluir aviso: " + err.message);
+            }
         };
 
         async function syncRanking() {
@@ -1323,12 +1397,30 @@
             });
 
             const globalPct = totalAnsweredGlobal > 0 ? Math.round((totalCorrectGlobal / totalAnsweredGlobal) * 100) : 0;
+            
+            // Atualiza Donut Chart e Totais Estilo QConcursos
             const elPct = document.getElementById('metrics-global-pct');
+            const elTotal = document.getElementById('metrics-global-total');
             const elCorr = document.getElementById('metrics-global-correct');
             const elWrong = document.getElementById('metrics-global-wrong');
+            const pathCorrect = document.getElementById('metric-donut-correct');
+            const pathWrong = document.getElementById('metric-donut-wrong');
+
             if (elPct) elPct.textContent = `${globalPct}%`;
+            if (elTotal) elTotal.textContent = totalAnsweredGlobal;
             if (elCorr) elCorr.textContent = totalCorrectGlobal;
             if (elWrong) elWrong.textContent = totalWrongGlobal;
+
+            if (pathCorrect && pathWrong && totalAnsweredGlobal > 0) {
+                const correctRatio = (totalCorrectGlobal / totalAnsweredGlobal) * 100;
+                const wrongRatio = (totalWrongGlobal / totalAnsweredGlobal) * 100;
+                pathCorrect.setAttribute('stroke-dasharray', `${correctRatio}, 100`);
+                pathWrong.setAttribute('stroke-dasharray', `${wrongRatio}, 100`);
+                pathWrong.setAttribute('stroke-dashoffset', `-${correctRatio}`);
+            } else if (pathCorrect && pathWrong) {
+                pathCorrect.setAttribute('stroke-dasharray', `0, 100`);
+                pathWrong.setAttribute('stroke-dasharray', `0, 100`);
+            }
 
             let html = '';
             Object.entries(statsBySubject).forEach(([subject, data]) => {
@@ -1350,9 +1442,9 @@
                                     <span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 font-black">${tPct}%</span>
                                 </div>
                             </div>
-                            <!-- Barra de Progresso Estilo QConcursos (Verde para acertos, Vermelha para erros) -->
+                            <!-- Barra de Progresso Estilo QConcursos -->
                             <div class="w-full bg-slate-900 h-3 rounded-full overflow-hidden flex border border-slate-800 p-0.5 gap-0.5">
-                                <div class="bg-emerald-500 h-full rounded-l-full transition-all duration-500" style="width: ${correctBarWidth}%" title="Acertos"></div>
+                                <div class="bg-emerald-400 h-full rounded-l-full transition-all duration-500" style="width: ${correctBarWidth}%" title="Acertos"></div>
                                 <div class="bg-rose-500 h-full rounded-r-full transition-all duration-500" style="width: ${wrongBarWidth}%" title="Erros"></div>
                             </div>
                             <div class="flex justify-between text-[10px] text-slate-400 font-semibold pt-0.5">
@@ -1398,6 +1490,35 @@
             document.getElementById('admin-modal').classList.remove('hidden');
             document.getElementById('admin-modal').classList.add('flex');
             renderAdminSimuladosList();
+            renderAdminAvisosList();
+        };
+
+        window.closeAdminModal = function() {
+            document.getElementById('admin-modal').classList.add('hidden');
+            document.getElementById('admin-modal').classList.remove('flex');
+        };
+
+        window.switchAdminTab = function(tab) {
+            const btnSim = document.getElementById('admin-tab-simulados-btn');
+            const btnAvi = document.getElementById('admin-tab-avisos-btn');
+            const btnRnk = document.getElementById('admin-tab-ranking-btn');
+            const boxSim = document.getElementById('admin-tab-simulados');
+            const boxAvi = document.getElementById('admin-tab-avisos');
+            const boxRnk = document.getElementById('admin-tab-ranking');
+
+            const activeCls = "px-4 py-2 rounded-xl text-xs font-bold bg-amber-500 text-slate-950 cursor-pointer";
+            const inactiveCls = "px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 cursor-pointer";
+
+            btnSim.className = tab === 'simulados' ? activeCls : inactiveCls;
+            btnAvi.className = tab === 'avisos' ? activeCls : inactiveCls;
+            btnRnk.className = tab === 'ranking' ? activeCls : inactiveCls;
+
+            boxSim.classList.toggle('hidden', tab !== 'simulados');
+            boxAvi.classList.toggle('hidden', tab !== 'avisos');
+            boxRnk.classList.toggle('hidden', tab !== 'ranking');
+
+            if (tab === 'ranking') populateAdminRankingSelect();
+            if (tab === 'avisos') renderAdminAvisosList();
         };
 
         window.closeAdminModal = function() {
