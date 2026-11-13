@@ -395,9 +395,10 @@
             </div>
 
             <!-- Abas do Painel Admin -->
-            <div class="flex gap-2 mb-6 border-b border-slate-200 dark:border-slate-800 pb-3">
+            <div class="flex flex-wrap gap-2 mb-6 border-b border-slate-200 dark:border-slate-800 pb-3">
                 <button onclick="switchAdminTab('simulados')" id="admin-tab-simulados-btn" class="px-4 py-2 rounded-xl text-xs font-bold bg-amber-500 text-slate-950 cursor-pointer">Simulados / Questões</button>
                 <button onclick="switchAdminTab('avisos')" id="admin-tab-avisos-btn" class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 cursor-pointer">Enviar Aviso Global</button>
+                <button onclick="switchAdminTab('ranking')" id="admin-tab-ranking-btn" class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 cursor-pointer">Gerenciar Ranking</button>
             </div>
 
             <!-- Aba 1: Formulário e Gerenciamento de Simulados -->
@@ -458,6 +459,23 @@
                 </form>
             </div>
 
+            <!-- Aba 3: Gerenciar Ranking (Limpar/Excluir Registros de Teste) -->
+            <div id="admin-tab-ranking" class="hidden space-y-4">
+                <div class="bg-slate-50 dark:bg-slate-950/60 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div>
+                            <h4 class="text-sm font-black text-amber-600 dark:text-amber-400 uppercase tracking-wider">Controle do Ranking Global</h4>
+                            <p class="text-xs text-slate-600 dark:text-slate-400">Selecione um simulado para visualizar ou apagar registros de testes do ranking.</p>
+                        </div>
+                        <select id="admin-ranking-sim-select" onchange="loadAdminRankingList()" class="px-3 py-2 rounded-xl bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-xs font-bold focus:border-amber-500 focus:outline-none">
+                        </select>
+                    </div>
+                    <div id="admin-ranking-list" class="space-y-2 max-h-64 overflow-y-auto">
+                        <p class="text-xs text-slate-400 text-center py-4">Selecione um simulado acima.</p>
+                    </div>
+                </div>
+            </div>
+
             <div class="mt-6 pt-4 border-t border-slate-200 dark:border-slate-800">
                 <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1">Senha Administrativa para Confirmação</label>
                 <input type="password" id="admin-pass" placeholder="Senha (pmba2026)" class="w-full sm:w-64 px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-sm focus:border-amber-500 focus:outline-none" />
@@ -470,8 +488,8 @@
          ========================================================= -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, sendPasswordResetEmail, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, deleteDoc, collection, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, signInWithPopup, GoogleAuthProvider, sendPasswordResetEmail, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, deleteDoc, collection, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const defaultFirebaseConfig = {
             apiKey: "AIzaSyDiF0601y58NdkAwNBLG4DkHq1xkB53sRo",
@@ -490,8 +508,39 @@
         let currentUser = null;
         let rankingUnsubscribe = null;
         let avisosUnsubscribe = null;
+        let commentsUnsubscribe = null;
         const OWNER_EMAILS = ["d_mob580@hotmail.com", "sntjoca@gmail.com"];
         let authCurrentMode = 'login'; // 'login' ou 'register'
+
+        // Alternar Tema Claro / Escuro com persistência
+        window.toggleTheme = function() {
+            const htmlEl = document.documentElement;
+            if (htmlEl.classList.contains('dark')) {
+                htmlEl.classList.remove('dark');
+                localStorage.setItem('oficializa_theme', 'light');
+            } else {
+                htmlEl.classList.add('dark');
+                localStorage.setItem('oficializa_theme', 'dark');
+            }
+        };
+
+        // Aplicar tema salvo imediatamente
+        (function applySavedTheme() {
+            const saved = localStorage.getItem('oficializa_theme');
+            if (saved === 'light') {
+                document.documentElement.classList.remove('dark');
+            } else {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+
+        // Helper para obter sempre o Nome de Exibição (nunca o e-mail completo)
+        function getDisplayName(user) {
+            if (window.candidateName && window.candidateName.trim()) return window.candidateName.trim();
+            if (user?.displayName && user.displayName.trim()) return user.displayName.trim();
+            if (user?.email) return user.email.split('@')[0];
+            return "Candidato";
+        }
 
         let defaultSimulados = [
             {
@@ -582,17 +631,21 @@
                     await loadCustomSimulados();
                     listenAvisos();
 
-                    onAuthStateChanged(auth, (user) => {
+                    onAuthStateChanged(auth, async (user) => {
                         if (user) {
                             currentUser = user;
-                            document.getElementById('header-username').textContent = user.email || "Candidato";
+                            window.candidateName = getDisplayName(user);
+                            document.getElementById('header-username').textContent = window.candidateName;
                             document.getElementById('auth-modal').classList.add('hidden');
                             document.getElementById('user-info-badge').classList.remove('hidden');
                             document.getElementById('logout-btn').classList.remove('hidden');
                             checkAdminPrivileges();
+                            listenAvisos();
+                            await loadUserAnswersFromCloud();
                             loadUserProgressAndRender();
                         } else {
                             currentUser = null;
+                            userAnswers = {};
                             document.getElementById('auth-modal').classList.remove('hidden');
                             document.getElementById('user-info-badge').classList.add('hidden');
                             document.getElementById('logout-btn').classList.add('hidden');
@@ -664,14 +717,15 @@
                 if (auth) {
                     if (authCurrentMode === 'register') {
                         userCred = await createUserWithEmailAndPassword(auth, email, password);
+                        await updateProfile(userCred.user, { displayName: name });
                         window.candidateName = name;
                     } else {
                         userCred = await signInWithEmailAndPassword(auth, email, password);
-                        window.candidateName = userCred.user.displayName || name;
+                        window.candidateName = getDisplayName(userCred.user);
                     }
                     currentUser = userCred.user;
                 } else {
-                    currentUser = { uid: "local-" + btoa(email).substring(0,10), email };
+                    currentUser = { uid: "local-" + btoa(email).substring(0,10), email, displayName: name };
                     window.candidateName = name;
                 }
 
@@ -681,6 +735,7 @@
                 document.getElementById('logout-btn').classList.remove('hidden');
 
                 checkAdminPrivileges();
+                await loadUserAnswersFromCloud();
                 loadUserProgressAndRender();
                 syncRanking();
             } catch (err) {
@@ -699,7 +754,7 @@
                 const provider = new GoogleAuthProvider();
                 const result = await signInWithPopup(auth, provider);
                 currentUser = result.user;
-                window.candidateName = currentUser.displayName || currentUser.email.split('@')[0];
+                window.candidateName = getDisplayName(currentUser);
 
                 document.getElementById('header-username').textContent = window.candidateName;
                 document.getElementById('auth-modal').classList.add('hidden');
@@ -707,6 +762,7 @@
                 document.getElementById('logout-btn').classList.remove('hidden');
 
                 checkAdminPrivileges();
+                await loadUserAnswersFromCloud();
                 loadUserProgressAndRender();
                 syncRanking();
             } catch (err) {
@@ -808,6 +864,7 @@
             eliminatedOptions = {};
             currentQuizFilter = 'all';
 
+            listenCommentsForSimulado(simId);
             startTimer();
             loadUserProgressAndRender();
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -815,6 +872,10 @@
 
         window.goHome = function() {
             stopTimer();
+            if (commentsUnsubscribe) {
+                commentsUnsubscribe();
+                commentsUnsubscribe = null;
+            }
             document.getElementById('floating-timer-widget').classList.add('hidden');
             document.getElementById('view-quiz').classList.add('hidden');
             document.getElementById('view-home').classList.remove('hidden');
@@ -922,86 +983,74 @@
                 }).join('');
 
                 const qComments = questionComments[q.id] || [];
-                const commentsHtml = qComments.map(c => `
-                    <div class="p-3 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs space-y-1">
-                        <div class="flex items-center justify-between font-bold text-amber-600 dark:text-amber-400">
-                            <span>${c.name}</span>
-                            <span class="text-[10px] text-slate-400 font-normal">${new Date(c.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                        </div>
-                        <p class="text-slate-700 dark:text-slate-300 leading-relaxed">${c.text}</p>
-                    </div>
-                `).join('');
+        // Escuta comentários em tempo real para o simulado aberto
+        function listenCommentsForSimulado(simId) {
+            if (!db) return;
+            if (commentsUnsubscribe) commentsUnsubscribe();
 
-                let commentBox = "";
-                if (isAnswered) {
-                    commentBox = `
-                        <div class="mt-6 rounded-2xl bg-slate-50 dark:bg-slate-950 p-5 border border-slate-200 dark:border-slate-800 space-y-4">
-                            <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
-                                <span class="text-xs font-extrabold uppercase tracking-widest text-amber-600 dark:text-amber-400">Gabarito Comentado</span>
-                                <span class="px-2.5 py-0.5 rounded bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-xs font-bold border border-emerald-500/30">Correta: ${q.correct}</span>
-                            </div>
-                            <div class="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-500/40">
-                                <span class="px-2 py-0.5 rounded bg-emerald-600 text-white text-[10px] font-black uppercase block w-max mb-1">Fundamentação da Correta (${q.correct})</span>
-                                <p class="text-sm text-emerald-950 dark:text-emerald-100 leading-relaxed">${q.correctExplanation}</p>
-                            </div>
-                            <div class="p-4 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-500/30">
-                                <span class="px-2 py-0.5 rounded bg-rose-600 text-white text-[10px] font-black uppercase block w-max mb-2">Análise dos Erros (Demais Alternativas)</span>
-                                <ul class="space-y-2">
-                                    ${q.errorsAnalysis.map(err => {
-                                        const isUserMistake = (!isCorrect && userChoice === err.key);
-                                        return `
-                                            <li class="p-2.5 rounded-lg text-xs leading-relaxed ${isUserMistake ? 'bg-rose-100 dark:bg-rose-900/60 border border-rose-300 dark:border-rose-400/50 text-rose-950 dark:text-white' : 'bg-white dark:bg-slate-900/80 text-slate-700 dark:text-slate-300'}">
-                                                <span class="font-bold text-rose-600 dark:text-rose-400 mr-1.5">[${err.key}]</span> ${err.reason} ${isUserMistake ? '<strong class="text-rose-600 dark:text-rose-300 ml-1">(Sua escolha incorreta)</strong>' : ''}
-                                            </li>
-                                        `;
-                                    }).join('')}
-                                </ul>
-                            </div>
+            try {
+                const colRef = collection(db, 'artifacts', appId, 'public', 'data', `comments_${simId}`);
+                commentsUnsubscribe = onSnapshot(colRef, (snap) => {
+                    questionComments = {};
+                    snap.forEach(d => {
+                        const data = d.data();
+                        const qId = data.questionId;
+                        if (!questionComments[qId]) questionComments[qId] = [];
+                        questionComments[qId].push(data);
+                    });
+                    Object.keys(questionComments).forEach(qId => {
+                        questionComments[qId].sort((a, b) => (a.time || 0) - (b.time || 0));
+                    });
+                    if (activeSimulado && activeSimulado.id === simId) {
+                        renderQuizQuestions();
+                    }
+                }, (err) => {
+                    console.warn("Erro ao carregar comentários em tempo real:", err);
+                });
+            } catch (e) {
+                console.warn("Erro ao configurar listener de comentários:", e);
+            }
+        }
 
-                            <div class="pt-3 border-t border-slate-200 dark:border-slate-800 space-y-3">
-                                <span class="text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-400 block">Comentários e Discussões da Questão</span>
-                                <div class="space-y-2 max-h-48 overflow-y-auto">${commentsHtml || '<p class="text-xs text-slate-400 italic">Nenhum comentário nesta questão ainda. Seja o primeiro!</p>'}</div>
-                                <form onsubmit="handlePostComment(event, ${q.id})" class="flex gap-2 pt-2">
-                                    <input type="text" id="comment-input-${q.id}" required placeholder="Escreva seu comentário ou dúvida..." class="flex-1 px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-xs focus:border-amber-500 focus:outline-none" />
-                                    <button type="submit" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs cursor-pointer">Enviar</button>
-                                </form>
-                            </div>
-                        </div>
-                    `;
+        // Persistência das respostas do usuário no Firestore e LocalStorage
+        async function loadUserAnswersFromCloud() {
+            if (!currentUser) return;
+            const localKey = `oficializa_answers_${currentUser.uid}`;
+            try {
+                const localSaved = localStorage.getItem(localKey);
+                if (localSaved) {
+                    userAnswers = JSON.parse(localSaved);
                 }
+            } catch (e) {}
 
-                const card = document.createElement('article');
-                card.className = "bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-7 border border-slate-200 dark:border-slate-800 shadow-xl";
-                card.innerHTML = `
-                    <div class="flex items-center justify-between gap-2 mb-4">
-                        <span class="px-3 py-1 rounded-lg bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-white text-xs font-extrabold border border-slate-200 dark:border-slate-800">Questão ${String(q.id).padStart(2, '0')}</span>
-                        <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">${q.theme}</span>
-                    </div>
-                    <p class="text-slate-900 dark:text-white font-semibold text-base sm:text-[17px] leading-relaxed mb-5">${q.text}</p>
-                    <div class="space-y-2.5">${optionsHtml}</div>
-                    ${commentBox}
-                `;
-                container.appendChild(card);
-            });
+            if (!db) return;
+            try {
+                const progressDoc = await getDoc(doc(db, 'artifacts', appId, 'public', 'data', 'user_progress', currentUser.uid));
+                if (progressDoc.exists() && progressDoc.data().answers) {
+                    userAnswers = progressDoc.data().answers;
+                    localStorage.setItem(localKey, JSON.stringify(userAnswers));
+                }
+            } catch (err) {
+                console.warn("Aviso ao carregar progresso salvo:", err);
+            }
+        }
 
-            const totalQ = activeSimulado.questions.length;
-            document.getElementById('quiz-progress-badge').textContent = `${answeredCount}/${totalQ} resp.`;
-            document.getElementById('quiz-correct-count').textContent = correctCount;
-            document.getElementById('quiz-wrong-count').textContent = wrongCount;
-            document.getElementById('filter-all-count').textContent = totalQ;
-            document.getElementById('filter-wrong-count').textContent = wrongCount;
+        async function saveUserAnswersToCloud() {
+            if (!currentUser) return;
+            const localKey = `oficializa_answers_${currentUser.uid}`;
+            try {
+                localStorage.setItem(localKey, JSON.stringify(userAnswers));
+            } catch (e) {}
 
-            const finalPct = answeredCount > 0 ? Math.round((correctCount / totalQ) * 100) : 0;
-            document.getElementById('quiz-final-pct').textContent = `${finalPct}%`;
-
-            const summaryBox = document.getElementById('quiz-summary-box');
-            if (answeredCount === totalQ) {
-                summaryBox.classList.remove('hidden');
-                stopTimer();
-                document.getElementById('floating-timer-widget').classList.add('hidden');
-                syncRanking();
-            } else {
-                summaryBox.classList.add('hidden');
+            if (!db) return;
+            try {
+                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'user_progress', currentUser.uid), {
+                    answers: userAnswers,
+                    name: getDisplayName(currentUser),
+                    updatedAt: Date.now()
+                }, { merge: true });
+            } catch (err) {
+                console.warn("Aviso ao salvar progresso na nuvem:", err);
             }
         }
 
@@ -1009,6 +1058,18 @@
             if (!activeSimulado) return;
             if (!userAnswers[activeSimulado.id]) userAnswers[activeSimulado.id] = {};
             userAnswers[activeSimulado.id][qId] = optKey;
+            saveUserAnswersToCloud();
+            renderQuizQuestions();
+            updateGlobalMetrics();
+        };
+
+        window.resetCurrentSimuladoAnswers = async function() {
+            if (!activeSimulado) return;
+            if (userAnswers[activeSimulado.id]) {
+                delete userAnswers[activeSimulado.id];
+            }
+            eliminatedOptions = {};
+            await saveUserAnswersToCloud();
             renderQuizQuestions();
             updateGlobalMetrics();
         };
@@ -1038,19 +1099,24 @@
             event.preventDefault();
             const input = document.getElementById(`comment-input-${qId}`);
             const text = input.value.trim();
-            if (!text || !activeSimulado || !db) return;
+            if (!text || !activeSimulado) return;
 
             const commentObj = {
                 questionId: qId,
-                name: window.candidateName || currentUser?.email || "Candidato",
+                name: getDisplayName(currentUser),
                 text,
                 time: Date.now()
             };
 
+            if (!questionComments[qId]) questionComments[qId] = [];
+            questionComments[qId].push(commentObj);
+            input.value = "";
+            renderQuizQuestions();
+
+            if (!db) return;
             try {
                 const commentId = "com-" + Date.now() + "-" + Math.floor(Math.random()*1000);
                 await setDoc(doc(db, 'artifacts', appId, 'public', 'data', `comments_${activeSimulado.id}`, commentId), commentObj);
-                input.value = "";
             } catch (err) {
                 console.error("Erro ao enviar comentário:", err);
             }
@@ -1069,6 +1135,7 @@
 
         function listenAvisos() {
             if (!db) return;
+            if (avisosUnsubscribe) avisosUnsubscribe();
             try {
                 const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'avisos_globais');
                 avisosUnsubscribe = onSnapshot(colRef, (snap) => {
@@ -1150,11 +1217,12 @@
                 }
             });
             const percentage = Math.round((correct / total) * 100);
+            const displayName = getDisplayName(currentUser);
 
             try {
                 const rankRef = doc(db, 'artifacts', appId, 'public', 'data', `ranking_${activeSimulado.id}`, currentUser.uid);
                 await setDoc(rankRef, {
-                    name: window.candidateName || currentUser.email,
+                    name: displayName,
                     correct,
                     answered,
                     total,
@@ -1193,7 +1261,7 @@
         function renderLocalRankingFallback(simId, correct, answered, total, percentage) {
             const entries = [{
                 id: currentUser ? currentUser.uid : 'local-user',
-                name: window.candidateName || 'Você',
+                name: getDisplayName(currentUser),
                 correct,
                 answered,
                 total,
@@ -1214,11 +1282,12 @@
 
             tbody.innerHTML = entries.map((entry, idx) => {
                 const pos = idx + 1;
-                const isMe = entry.id === currentUser?.uid || entry.name === (window.candidateName || 'Você');
+                const isMe = entry.id === currentUser?.uid;
+                const cleanName = (entry.name && entry.name.includes('@')) ? entry.name.split('@')[0] : (entry.name || 'Candidato');
                 return `
                     <tr class="${isMe ? 'bg-amber-500/10' : 'hover:bg-slate-100 dark:hover:bg-slate-900/50'} transition">
                         <td class="py-3 px-4 text-center font-bold text-slate-700 dark:text-slate-300">${pos}º</td>
-                        <td class="py-3 px-4 font-bold text-slate-900 dark:text-white">${entry.name} ${isMe ? '<span class="ml-1 px-1.5 py-0.5 rounded bg-amber-400 text-slate-950 text-[9px] font-black">VOCÊ</span>' : ''}</td>
+                        <td class="py-3 px-4 font-bold text-slate-900 dark:text-white">${cleanName} ${isMe ? '<span class="ml-1 px-1.5 py-0.5 rounded bg-amber-400 text-slate-950 text-[9px] font-black">VOCÊ</span>' : ''}</td>
                         <td class="py-3 px-4 text-center font-extrabold text-emerald-600 dark:text-emerald-400">${entry.correct}/${entry.total}</td>
                         <td class="py-3 px-4 text-center font-bold text-slate-800 dark:text-slate-200">${entry.percentage}%</td>
                         <td class="py-3 px-4 text-right">${entry.completed ? '<span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold">Concluído</span>' : '<span class="text-slate-400 text-[10px]">Em andamento</span>'}</td>
@@ -1283,19 +1352,91 @@
         window.switchAdminTab = function(tab) {
             const btnSim = document.getElementById('admin-tab-simulados-btn');
             const btnAvi = document.getElementById('admin-tab-avisos-btn');
+            const btnRnk = document.getElementById('admin-tab-ranking-btn');
             const boxSim = document.getElementById('admin-tab-simulados');
             const boxAvi = document.getElementById('admin-tab-avisos');
+            const boxRnk = document.getElementById('admin-tab-ranking');
 
-            if (tab === 'simulados') {
-                btnSim.className = "px-4 py-2 rounded-xl text-xs font-bold bg-amber-500 text-slate-950 cursor-pointer";
-                btnAvi.className = "px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 cursor-pointer";
-                boxSim.classList.remove('hidden');
-                boxAvi.classList.add('hidden');
-            } else {
-                btnAvi.className = "px-4 py-2 rounded-xl text-xs font-bold bg-amber-500 text-slate-950 cursor-pointer";
-                btnSim.className = "px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 cursor-pointer";
-                boxAvi.classList.remove('hidden');
-                boxSim.classList.add('hidden');
+            const activeCls = "px-4 py-2 rounded-xl text-xs font-bold bg-amber-500 text-slate-950 cursor-pointer";
+            const inactiveCls = "px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 cursor-pointer";
+
+            btnSim.className = tab === 'simulados' ? activeCls : inactiveCls;
+            btnAvi.className = tab === 'avisos' ? activeCls : inactiveCls;
+            btnRnk.className = tab === 'ranking' ? activeCls : inactiveCls;
+
+            boxSim.classList.toggle('hidden', tab !== 'simulados');
+            boxAvi.classList.toggle('hidden', tab !== 'avisos');
+            boxRnk.classList.toggle('hidden', tab !== 'ranking');
+
+            if (tab === 'ranking') {
+                populateAdminRankingSelect();
+            }
+        };
+
+        function populateAdminRankingSelect() {
+            const select = document.getElementById('admin-ranking-sim-select');
+            if (!select) return;
+            select.innerHTML = allSimulados.map(s => `<option value="${s.id}">${s.title}</option>`).join('');
+            loadAdminRankingList();
+        }
+
+        window.loadAdminRankingList = async function() {
+            const select = document.getElementById('admin-ranking-sim-select');
+            const listEl = document.getElementById('admin-ranking-list');
+            if (!select || !listEl || !db) return;
+
+            const simId = select.value;
+            listEl.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">Buscando registros do ranking...</p>`;
+
+            try {
+                const snap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', `ranking_${simId}`));
+                const entries = [];
+                snap.forEach(d => entries.push({ id: d.id, ...d.data() }));
+                entries.sort((a, b) => (b.correct || 0) - (a.correct || 0));
+
+                if (entries.length === 0) {
+                    listEl.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">Nenhum registro no ranking para este simulado.</p>`;
+                    return;
+                }
+
+                listEl.innerHTML = entries.map(entry => {
+                    const cleanName = (entry.name && entry.name.includes('@')) ? entry.name.split('@')[0] : (entry.name || 'Candidato');
+                    return `
+                        <div class="flex items-center justify-between p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs">
+                            <div>
+                                <span class="font-bold text-slate-900 dark:text-white block">${cleanName}</span>
+                                <span class="text-[10px] text-slate-400">Acertos: ${entry.correct}/${entry.total} (${entry.percentage}%)</span>
+                            </div>
+                            <button onclick="deleteRankingEntryAdmin('${simId}', '${entry.id}')" class="px-3 py-1.5 rounded-lg bg-rose-600/20 text-rose-600 dark:text-rose-400 hover:bg-rose-600/30 font-bold cursor-pointer">
+                                Apagar do Ranking
+                            </button>
+                        </div>
+                    `;
+                }).join('');
+            } catch (err) {
+                listEl.innerHTML = `<p class="text-xs text-rose-500 text-center py-4">Erro ao carregar ranking: ${err.message}</p>`;
+            }
+        };
+
+        window.deleteRankingEntryAdmin = async function(simId, userId) {
+            const pass = document.getElementById('admin-pass').value;
+            if (pass !== "pmba2026") {
+                alert("Digite a senha administrativa (pmba2026) abaixo para apagar registros do ranking!");
+                return;
+            }
+            try {
+                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', `ranking_${simId}`, userId));
+                if (userId === currentUser?.uid && userAnswers[simId]) {
+                    delete userAnswers[simId];
+                    await saveUserAnswersToCloud();
+                    updateGlobalMetrics();
+                    if (activeSimulado && activeSimulado.id === simId) {
+                        renderQuizQuestions();
+                    }
+                }
+                loadAdminRankingList();
+            } catch (err) {
+                alert("Erro ao apagar registro: " + err.message);
             }
         };
 
