@@ -186,28 +186,28 @@
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-6">
                     <div>
                         <span class="text-xs font-extrabold uppercase tracking-widest text-amber-400">Painel de Desempenho Estilo QConcursos</span>
-                        <h3 class="text-xl sm:text-2xl font-black text-white mt-0.5">Estatísticas e Aproveitamento Geral</h3>
-                        <p class="text-xs text-slate-400 mt-1">Acompanhe seu índice de acertos, questões respondidas e progresso detalhado por matéria e tópico do edital.</p>
+                        <h3 class="text-xl sm:text-2xl font-black text-white mt-0.5">Estatísticas e Aproveitamento Detalhado</h3>
+                        <p class="text-xs text-slate-400 mt-1">Acompanhe seu índice de acertos, erros e percentual exato por matéria e tópico do edital CFO PMBA.</p>
                     </div>
-                    <!-- Cards de Resumo Global -->
-                    <div class="flex items-center gap-3 shrink-0">
+                    <!-- Cards de Resumo Global Estilo QConcursos -->
+                    <div class="flex items-center gap-2 sm:gap-3 shrink-0 flex-wrap">
                         <div class="bg-slate-950 px-4 py-3 rounded-2xl border border-slate-800 text-center">
                             <span id="metrics-global-pct" class="text-2xl font-black text-amber-400 block">0%</span>
                             <span class="text-[10px] uppercase font-bold text-slate-400">Aproveitamento</span>
                         </div>
                         <div class="bg-slate-950 px-4 py-3 rounded-2xl border border-slate-800 text-center">
                             <span id="metrics-global-correct" class="text-2xl font-black text-emerald-400 block">0</span>
-                            <span class="text-[10px] uppercase font-bold text-slate-400">Acertos</span>
+                            <span class="text-[10px] uppercase font-bold text-slate-400">Certas</span>
                         </div>
                         <div class="bg-slate-950 px-4 py-3 rounded-2xl border border-slate-800 text-center">
                             <span id="metrics-global-wrong" class="text-2xl font-black text-rose-400 block">0</span>
-                            <span class="text-[10px] uppercase font-bold text-slate-400">Erros</span>
+                            <span class="text-[10px] uppercase font-bold text-slate-400">Erradas</span>
                         </div>
                     </div>
                 </div>
 
                 <div id="detailed-metrics-breakdown" class="space-y-4">
-                    <!-- Preenchido via JS -->
+                    <!-- Preenchido via JS no formato QConcursos -->
                 </div>
             </div>
         </div>
@@ -1290,18 +1290,17 @@
             let statsBySubject = {};
             let totalAnsweredGlobal = 0;
             let totalCorrectGlobal = 0;
-            let totalQuestionsGlobal = 0;
+            let totalWrongGlobal = 0;
 
             allSimulados.forEach(sim => {
                 const cat = sim.category || "Geral";
-                if (!statsBySubject[cat]) statsBySubject[cat] = { answered: 0, correct: 0, total: 0, topics: {} };
+                if (!statsBySubject[cat]) statsBySubject[cat] = { answered: 0, correct: 0, wrong: 0, total: 0, topics: {} };
 
                 sim.questions.forEach(q => {
                     statsBySubject[cat].total++;
-                    totalQuestionsGlobal++;
                     const topic = q.theme || "Geral";
                     if (!statsBySubject[cat].topics[topic]) {
-                        statsBySubject[cat].topics[topic] = { total: 0, answered: 0, correct: 0 };
+                        statsBySubject[cat].topics[topic] = { total: 0, answered: 0, correct: 0, wrong: 0 };
                     }
                     statsBySubject[cat].topics[topic].total++;
 
@@ -1314,20 +1313,22 @@
                             statsBySubject[cat].correct++;
                             statsBySubject[cat].topics[topic].correct++;
                             totalCorrectGlobal++;
+                        } else {
+                            statsBySubject[cat].wrong++;
+                            statsBySubject[cat].topics[topic].wrong++;
+                            totalWrongGlobal++;
                         }
                     }
                 });
             });
 
             const globalPct = totalAnsweredGlobal > 0 ? Math.round((totalCorrectGlobal / totalAnsweredGlobal) * 100) : 0;
-            const globalWrong = totalAnsweredGlobal - totalCorrectGlobal;
-
             const elPct = document.getElementById('metrics-global-pct');
             const elCorr = document.getElementById('metrics-global-correct');
             const elWrong = document.getElementById('metrics-global-wrong');
             if (elPct) elPct.textContent = `${globalPct}%`;
             if (elCorr) elCorr.textContent = totalCorrectGlobal;
-            if (elWrong) elWrong.textContent = globalWrong;
+            if (elWrong) elWrong.textContent = totalWrongGlobal;
 
             let html = '';
             Object.entries(statsBySubject).forEach(([subject, data]) => {
@@ -1336,17 +1337,26 @@
                 let topicsHtml = '';
                 Object.entries(data.topics).forEach(([topicName, tStat]) => {
                     const tPct = tStat.answered > 0 ? Math.round((tStat.correct / tStat.answered) * 100) : 0;
+                    const correctBarWidth = tStat.answered > 0 ? Math.round((tStat.correct / tStat.answered) * 100) : 0;
+                    const wrongBarWidth = tStat.answered > 0 ? Math.round((tStat.wrong / tStat.answered) * 100) : 0;
+
                     topicsHtml += `
-                        <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-2">
-                            <div class="flex items-center justify-between text-xs">
+                        <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-xs">
                                 <span class="font-bold text-slate-200">${topicName}</span>
-                                <span class="font-extrabold text-amber-400">${tStat.correct} acertos / ${tStat.answered} resp. (${tPct}%)</span>
+                                <div class="flex items-center gap-2">
+                                    <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-extrabold">Certas: ${tStat.correct}</span>
+                                    <span class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-400 font-extrabold">Erradas: ${tStat.wrong}</span>
+                                    <span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 font-black">${tPct}%</span>
+                                </div>
                             </div>
-                            <div class="w-full bg-slate-900 h-2.5 rounded-full overflow-hidden p-0.5 border border-slate-800">
-                                <div class="bg-gradient-to-r from-amber-500 to-emerald-400 h-full rounded-full transition-all duration-500" style="width: ${tPct}%"></div>
+                            <!-- Barra de Progresso Estilo QConcursos (Verde para acertos, Vermelha para erros) -->
+                            <div class="w-full bg-slate-900 h-3 rounded-full overflow-hidden flex border border-slate-800 p-0.5 gap-0.5">
+                                <div class="bg-emerald-500 h-full rounded-l-full transition-all duration-500" style="width: ${correctBarWidth}%" title="Acertos"></div>
+                                <div class="bg-rose-500 h-full rounded-r-full transition-all duration-500" style="width: ${wrongBarWidth}%" title="Erros"></div>
                             </div>
-                            <div class="flex justify-between text-[10px] text-slate-500 font-semibold pt-1">
-                                <span>Total no Tópico: ${tStat.total} questões</span>
+                            <div class="flex justify-between text-[10px] text-slate-400 font-semibold pt-0.5">
+                                <span>Respondidas: ${tStat.answered} de ${tStat.total} questões</span>
                                 <span>Aproveitamento: ${tPct}%</span>
                             </div>
                         </div>
@@ -1359,7 +1369,7 @@
                             <h4 class="text-sm font-black text-amber-400 uppercase tracking-wider">${subject}</h4>
                             <div class="flex items-center gap-2">
                                 <span class="px-3 py-1 rounded-lg bg-amber-500/10 text-amber-400 text-xs font-bold border border-amber-500/20">
-                                    Aproveitamento: ${subjPct}% (${data.correct}/${data.answered})
+                                    Aproveitamento da Matéria: ${subjPct}% (${data.correct} certas / ${data.wrong} erradas)
                                 </span>
                             </div>
                         </div>
@@ -1370,7 +1380,7 @@
                 `;
             });
 
-            listEl.innerHTML = html || `<p class="text-xs text-slate-500 text-center py-6">Responda aos simulados para visualizar as estatísticas completas por matéria e tópico do edital.</p>`;
+            listEl.innerHTML = html || `<p class="text-xs text-slate-500 text-center py-6">Responda aos simulados para visualizar as estatísticas completas estilo QConcursos por matéria e tópico do edital.</p>`;
         }
 
         function loadUserProgressAndRender() {
