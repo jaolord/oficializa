@@ -431,7 +431,7 @@
         <!-- Abas da Home -->
         <div class="flex rounded-2xl bg-slate-900 p-1.5 border border-slate-800 shadow-sm max-w-2xl">
             <button onclick="switchHomeTab('catalog')" id="home-tab-catalog-btn" class="flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider bg-amber-500 text-slate-950 transition cursor-pointer">Simulados</button>
-            <button onclick="switchHomeTab('metrics')" id="home-tab-metrics-btn" class="flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider text-slate-400 hover:text-white transition cursor-pointer">Métricas</button>
+            <button onclick="switchHomeTab('metrics')" id="home-tab-metrics-btn" class="flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider text-slate-400 hover:text-white transition cursor-pointer">Desempenho</button>
             <button onclick="switchHomeTab('cronograma')" id="home-tab-cronograma-btn" class="flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider text-slate-400 hover:text-white transition cursor-pointer">Cronograma</button>
         </div>
 
@@ -473,56 +473,80 @@
         </div>
 
         <!-- CONTEÚDO 2: MÉTRICAS E DESEMPENHO POR MATÉRIA/ASSUNTO -->
-        <div id="home-content-metrics" class="hidden space-y-8">
-            <div class="bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-800 shadow-xl space-y-8">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-6">
+        <div id="home-content-metrics" class="hidden space-y-6">
+            <!-- Resumo global -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div class="bg-slate-900 rounded-2xl p-4 border border-slate-800 text-center">
+                    <span id="metrics-global-pct" class="text-2xl font-black text-amber-400 block">0%</span>
+                    <span class="text-[10px] uppercase font-bold text-slate-400">Aproveitamento</span>
+                </div>
+                <div class="bg-slate-900 rounded-2xl p-4 border border-slate-800 text-center">
+                    <span id="metrics-global-total" class="text-2xl font-black text-white block">0</span>
+                    <span class="text-[10px] uppercase font-bold text-slate-400">Questões</span>
+                </div>
+                <div class="bg-slate-900 rounded-2xl p-4 border border-slate-800 text-center">
+                    <span id="metrics-global-correct" class="text-2xl font-black text-emerald-400 block">0</span>
+                    <span class="text-[10px] uppercase font-bold text-slate-400">Acertos</span>
+                </div>
+                <div class="bg-slate-900 rounded-2xl p-4 border border-slate-800 text-center">
+                    <span id="metrics-global-wrong" class="text-2xl font-black text-rose-400 block">0</span>
+                    <span class="text-[10px] uppercase font-bold text-slate-400">Erros</span>
+                </div>
+            </div>
+
+            <!-- Cards de barras por disciplina -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <!-- DESEMPENHO POR DISCIPLINA -->
+                <div class="bg-slate-900 rounded-2xl p-5 border border-slate-800 space-y-4">
+                    <h4 class="text-[11px] font-black uppercase tracking-wider text-slate-400">Desempenho por Disciplina</h4>
+                    <div id="metrics-bars-performance" class="space-y-3">
+                        <p class="text-xs text-slate-500 text-center py-4">Sem dados ainda</p>
+                    </div>
+                </div>
+
+                <!-- AVANÇO NO EDITAL POR DISCIPLINA -->
+                <div class="bg-slate-900 rounded-2xl p-5 border border-slate-800 space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h4 class="text-[11px] font-black uppercase tracking-wider text-slate-400">Avanço no Edital por Disciplina</h4>
+                        <span class="text-[10px] text-slate-500">Acumulado</span>
+                    </div>
+                    <div id="metrics-bars-progress" class="space-y-3">
+                        <p class="text-xs text-slate-500 text-center py-4">Sem dados ainda</p>
+                    </div>
+                </div>
+
+                <!-- QUESTÕES POR DISCIPLINA -->
+                <div class="bg-slate-900 rounded-2xl p-5 border border-slate-800 space-y-4">
+                    <h4 class="text-[11px] font-black uppercase tracking-wider text-slate-400">Questões por Disciplina</h4>
+                    <div id="metrics-bars-questions" class="space-y-3">
+                        <p class="text-xs text-slate-500 text-center py-4">Sem dados ainda</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabela desempenho por tópico -->
+            <div class="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden">
+                <div class="px-5 py-4 border-b border-slate-800 flex items-center justify-between">
                     <div>
-                        <span class="text-xs font-extrabold uppercase tracking-widest text-amber-400">Painel de Desempenho Estilo QConcursos</span>
-                        <h3 class="text-xl sm:text-2xl font-black text-white mt-0.5">Estatísticas e Aproveitamento Detalhado</h3>
-                        <p class="text-xs text-slate-400 mt-1">Acompanhe seu índice de acertos, erros e percentual exato por matéria e tópico do edital CFO PMBA.</p>
+                        <h4 class="text-sm font-black text-white">Desempenho por tópico</h4>
+                        <p class="text-[11px] text-slate-400 mt-0.5">Todos os tópicos com questões respondidas</p>
                     </div>
                 </div>
-
-                <!-- Gráfico Estilo QConcursos & Cards de Resumo -->
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-center bg-slate-950 p-6 rounded-3xl border border-slate-800">
-                    <!-- Gráfico Donut Percentual de Rendimento -->
-                    <div class="flex flex-col items-center justify-center p-4 bg-slate-900 rounded-2xl border border-slate-800">
-                        <span class="text-xs font-black uppercase tracking-wider text-slate-400 mb-4">Percentual de Rendimento</span>
-                        <div class="relative w-40 h-40 flex items-center justify-center">
-                            <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-                                <path id="metric-donut-wrong" class="text-rose-500" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke-width="4.5" stroke="currentColor"></path>
-                                <path id="metric-donut-correct" class="text-emerald-400" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke-width="4.5" stroke="currentColor"></path>
-                            </svg>
-                            <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
-                                <span id="metrics-global-pct" class="text-2xl font-black text-white">0%</span>
-                                <span class="text-[9px] uppercase font-bold text-slate-400">Aproveitamento</span>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-4 mt-4 text-xs font-bold">
-                            <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-emerald-400"></span><span class="text-slate-300">Acertos</span></div>
-                            <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-rose-500"></span><span class="text-slate-300">Erros</span></div>
-                        </div>
-                    </div>
-
-                    <!-- Cards de Totais Estilo QConcursos -->
-                    <div class="lg:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 text-center flex flex-col justify-center">
-                            <span id="metrics-global-total" class="text-3xl font-black text-amber-400 block mb-1">0</span>
-                            <span class="text-[11px] uppercase font-bold text-slate-400">Resoluções de Questões</span>
-                        </div>
-                        <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 text-center flex flex-col justify-center">
-                            <span id="metrics-global-correct" class="text-3xl font-black text-emerald-400 block mb-1">0</span>
-                            <span class="text-[11px] uppercase font-bold text-slate-400">Resoluções Corretas</span>
-                        </div>
-                        <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 text-center flex flex-col justify-center">
-                            <span id="metrics-global-wrong" class="text-3xl font-black text-rose-400 block mb-1">0</span>
-                            <span class="text-[11px] uppercase font-bold text-slate-400">Resoluções Erradas</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="detailed-metrics-breakdown" class="space-y-4">
-                    <!-- Preenchido via JS no formato QConcursos -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead>
+                            <tr class="border-b border-slate-800 text-[10px] uppercase tracking-wider text-slate-500 bg-slate-950/80">
+                                <th class="py-3 px-4 font-bold">Disciplina</th>
+                                <th class="py-3 px-4 font-bold">Tópico</th>
+                                <th class="py-3 px-4 font-bold text-center">Questões</th>
+                                <th class="py-3 px-4 font-bold text-center">Desempenho</th>
+                                <th class="py-3 px-4 font-bold text-center">Acertos</th>
+                            </tr>
+                        </thead>
+                        <tbody id="metrics-topics-tbody" class="divide-y divide-slate-800">
+                            <tr><td colspan="5" class="py-8 text-center text-slate-500 text-xs">Responda questões para ver o desempenho por tópico.</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -1783,14 +1807,12 @@
         }
 
         function renderDetailedMetrics() {
-            const listEl = document.getElementById('detailed-metrics-breakdown');
-            if (!listEl) return;
-
-            // Agrega estatísticas por category e theme das questões respondidas
+            // Agrega stats por disciplina (category) e tópico (theme)
             let statsByCat = {};
             let totalAnsweredGlobal = 0;
             let totalCorrectGlobal = 0;
             let totalWrongGlobal = 0;
+            let topicRows = [];
 
             allSimulados.forEach(sim => {
                 const cat = sim.category || "Geral";
@@ -1798,7 +1820,7 @@
 
                 sim.questions.forEach(q => {
                     statsByCat[cat].total++;
-                    const topic = q.theme || q.subtopicCode || q.category || "Geral";
+                    const topic = q.theme || q.subtopicCode || "Geral";
                     if (!statsByCat[cat].topics[topic]) {
                         statsByCat[cat].topics[topic] = { total: 0, answered: 0, correct: 0, wrong: 0 };
                     }
@@ -1822,127 +1844,131 @@
                 });
             });
 
+            // Monta linhas da tabela de tópicos
+            Object.entries(statsByCat).forEach(([cat, data]) => {
+                Object.entries(data.topics).forEach(([topic, t]) => {
+                    if (t.answered > 0) {
+                        const pct = Math.round((t.correct / t.answered) * 100);
+                        topicRows.push({ cat, topic, answered: t.answered, correct: t.correct, wrong: t.wrong, pct, total: t.total });
+                    }
+                });
+            });
+            topicRows.sort((a, b) => a.pct - b.pct); // piores primeiro
+
             const globalPct = totalAnsweredGlobal > 0 ? Math.round((totalCorrectGlobal / totalAnsweredGlobal) * 100) : 0;
-            
             const elPct = document.getElementById('metrics-global-pct');
             const elTotal = document.getElementById('metrics-global-total');
             const elCorr = document.getElementById('metrics-global-correct');
             const elWrong = document.getElementById('metrics-global-wrong');
-            const pathCorrect = document.getElementById('metric-donut-correct');
-            const pathWrong = document.getElementById('metric-donut-wrong');
-
             if (elPct) elPct.textContent = `${globalPct}%`;
             if (elTotal) elTotal.textContent = totalAnsweredGlobal;
             if (elCorr) elCorr.textContent = totalCorrectGlobal;
             if (elWrong) elWrong.textContent = totalWrongGlobal;
 
-            if (pathCorrect && pathWrong && totalAnsweredGlobal > 0) {
-                const correctRatio = (totalCorrectGlobal / totalAnsweredGlobal) * 100;
-                const wrongRatio = (totalWrongGlobal / totalAnsweredGlobal) * 100;
-                pathCorrect.setAttribute('stroke-dasharray', `${correctRatio}, 100`);
-                pathWrong.setAttribute('stroke-dasharray', `${wrongRatio}, 100`);
-                pathWrong.setAttribute('stroke-dashoffset', `-${correctRatio}`);
-            } else if (pathCorrect && pathWrong) {
-                pathCorrect.setAttribute('stroke-dasharray', `0, 100`);
-                pathWrong.setAttribute('stroke-dasharray', `0, 100`);
+            // Ordena disciplinas por desempenho
+            const catList = Object.entries(statsByCat)
+                .filter(([, d]) => d.answered > 0 || d.total > 0)
+                .map(([name, d]) => ({
+                    name,
+                    answered: d.answered,
+                    correct: d.correct,
+                    wrong: d.wrong,
+                    total: d.total,
+                    pct: d.answered > 0 ? Math.round((d.correct / d.answered) * 100) : 0,
+                    progress: d.total > 0 ? Math.round((d.answered / d.total) * 100) : 0
+                }));
+
+            // Cores das barras (ciclo)
+            const barColors = ['#34d399','#60a5fa','#a78bfa','#fbbf24','#fb7185','#2dd4bf','#f472b6','#94a3b8'];
+
+            // --- Card: Desempenho por Disciplina ---
+            const perfEl = document.getElementById('metrics-bars-performance');
+            if (perfEl) {
+                const sorted = [...catList].filter(c => c.answered > 0).sort((a, b) => b.pct - a.pct);
+                if (sorted.length === 0) {
+                    perfEl.innerHTML = `<p class="text-xs text-slate-500 text-center py-4">Sem dados ainda</p>`;
+                } else {
+                    perfEl.innerHTML = sorted.slice(0, 8).map((c, i) => `
+                        <div class="space-y-1">
+                            <div class="flex items-center justify-between text-xs">
+                                <span class="font-semibold text-slate-300 truncate pr-2">${c.name}</span>
+                                <span class="font-black text-emerald-400 shrink-0">${c.pct}%</span>
+                            </div>
+                            <div class="w-full h-2.5 rounded-full bg-slate-800 overflow-hidden">
+                                <div class="h-full rounded-full transition-all duration-500" style="width:${c.pct}%;background:${barColors[i % barColors.length]}"></div>
+                            </div>
+                        </div>
+                    `).join('') + (sorted.length > 8 ? `<button onclick="showAllDisciplinesModal('perf')" class="text-[11px] text-emerald-400 font-bold mt-2 hover:underline cursor-pointer">Ver todas as ${sorted.length} disciplinas</button>` : '');
+                }
             }
 
-            // Mapeia categorias dos simulados para matérias do edital
-            const materiaOrder = [
-                "Língua Portuguesa", "Língua Inglesa", "Matemática", "Informática",
-                "História", "Geografia", "Direito Constitucional", "Direitos Humanos",
-                "Direito Administrativo", "Direito Penal", "Direito Processual Penal",
-                "Direito Penal Militar", "Direito Processual Penal Militar", "Geografia e Geopolítica", "Geral"
-            ];
-
-            // Ordena as categorias existentes de forma lógica
-            const sortedCats = Object.keys(statsByCat).sort((a, b) => {
-                const ia = materiaOrder.findIndex(m => a.toLowerCase().includes(m.toLowerCase()));
-                const ib = materiaOrder.findIndex(m => b.toLowerCase().includes(m.toLowerCase()));
-                return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
-            });
-
-            let html = '';
-            sortedCats.forEach(subject => {
-                const data = statsByCat[subject];
-                const subjPct = data.answered > 0 ? Math.round((data.correct / data.answered) * 100) : 0;
-                
-                // Ordena tópicos por código numérico quando possível
-                const sortedTopics = Object.entries(data.topics).sort((a, b) => {
-                    const na = parseFloat((a[0].match(/[\d.]+/) || ['999'])[0]);
-                    const nb = parseFloat((b[0].match(/[\d.]+/) || ['999'])[0]);
-                    return na - nb;
-                });
-
-                let topicsHtml = '';
-                sortedTopics.forEach(([topicName, tStat]) => {
-                    const tPct = tStat.answered > 0 ? Math.round((tStat.correct / tStat.answered) * 100) : 0;
-                    const correctBarWidth = tStat.answered > 0 ? Math.round((tStat.correct / tStat.answered) * 100) : 0;
-                    const wrongBarWidth = tStat.answered > 0 ? Math.round((tStat.wrong / tStat.answered) * 100) : 0;
-
-                    topicsHtml += `
-                        <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
-                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-xs">
-                                <span class="font-bold text-slate-200">${topicName}</span>
-                                <div class="flex items-center gap-2 flex-wrap">
-                                    <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-extrabold">Certas: ${tStat.correct}</span>
-                                    <span class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-400 font-extrabold">Erradas: ${tStat.wrong}</span>
-                                    <span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 font-black">${tPct}%</span>
-                                </div>
+            // --- Card: Avanço no Edital ---
+            const progEl = document.getElementById('metrics-bars-progress');
+            if (progEl) {
+                const sorted = [...catList].sort((a, b) => b.progress - a.progress);
+                if (sorted.length === 0) {
+                    progEl.innerHTML = `<p class="text-xs text-slate-500 text-center py-4">Sem dados ainda</p>`;
+                } else {
+                    progEl.innerHTML = sorted.slice(0, 8).map((c, i) => `
+                        <div class="space-y-1">
+                            <div class="flex items-center justify-between text-xs">
+                                <span class="font-semibold text-slate-300 truncate pr-2">${c.name}</span>
+                                <span class="font-black text-emerald-400 shrink-0">${c.progress}%</span>
                             </div>
-                            <div class="w-full bg-slate-900 h-3 rounded-full overflow-hidden flex border border-slate-800 p-0.5 gap-0.5">
-                                <div class="bg-emerald-400 h-full rounded-l-full transition-all duration-500" style="width: ${correctBarWidth}%" title="Acertos"></div>
-                                <div class="bg-rose-500 h-full rounded-r-full transition-all duration-500" style="width: ${wrongBarWidth}%" title="Erros"></div>
-                            </div>
-                            <div class="flex justify-between text-[10px] text-slate-400 font-semibold pt-0.5">
-                                <span>Respondidas: ${tStat.answered} de ${tStat.total} questões</span>
-                                <span>Aproveitamento: ${tPct}%</span>
+                            <div class="w-full h-2.5 rounded-full bg-slate-800 overflow-hidden">
+                                <div class="h-full rounded-full bg-emerald-400 transition-all duration-500" style="width:${c.progress}%"></div>
                             </div>
                         </div>
-                    `;
-                });
-
-                html += `
-                    <div class="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-4">
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800/80 pb-3">
-                            <h4 class="text-sm font-black text-amber-400 uppercase tracking-wider">${subject}</h4>
-                            <div class="flex items-center gap-2">
-                                <span class="px-3 py-1 rounded-lg bg-amber-500/10 text-amber-400 text-xs font-bold border border-amber-500/20">
-                                    ${subjPct}% (${data.correct} certas / ${data.wrong} erradas) · ${data.answered}/${data.total} questões
-                                </span>
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            ${topicsHtml}
-                        </div>
-                    </div>
-                `;
-            });
-
-            // Seção do edital completo (mapa do que ainda falta estudar)
-            let editalMapHtml = `
-                <div class="p-5 rounded-2xl bg-slate-950 border border-amber-500/20 space-y-4 mt-2">
-                    <div class="border-b border-slate-800 pb-3">
-                        <h4 class="text-sm font-black text-amber-400 uppercase tracking-wider">Mapa do Edital CFO PMBA</h4>
-                        <p class="text-[11px] text-slate-400 mt-1">Estrutura oficial dos assuntos. Use o Cronograma para planejar o estudo de cada tópico.</p>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-            `;
-            if (typeof EDITAL_TOPICS !== 'undefined') {
-                EDITAL_TOPICS.forEach(mat => {
-                    editalMapHtml += `
-                        <div class="p-3 rounded-xl bg-slate-900 border border-slate-800">
-                            <h5 class="text-xs font-black text-white mb-2">${mat.materia}</h5>
-                            <ul class="space-y-1">
-                                ${mat.topics.map(t => `<li class="text-[11px] text-slate-400 leading-snug">• ${t}</li>`).join('')}
-                            </ul>
-                        </div>
-                    `;
-                });
+                    `).join('') + (sorted.length > 8 ? `<p class="text-[11px] text-slate-500 mt-2">${sorted.length} disciplinas no total</p>` : '');
+                }
             }
-            editalMapHtml += `</div></div>`;
 
-            listEl.innerHTML = (html || `<p class="text-xs text-slate-500 text-center py-6">Responda aos simulados para visualizar as estatísticas por matéria e tópico.</p>`) + editalMapHtml;
+            // --- Card: Questões por Disciplina ---
+            const qEl = document.getElementById('metrics-bars-questions');
+            if (qEl) {
+                const sorted = [...catList].filter(c => c.answered > 0).sort((a, b) => b.answered - a.answered);
+                const maxQ = sorted.length ? sorted[0].answered : 1;
+                if (sorted.length === 0) {
+                    qEl.innerHTML = `<p class="text-xs text-slate-500 text-center py-4">Sem dados ainda</p>`;
+                } else {
+                    qEl.innerHTML = sorted.slice(0, 8).map((c, i) => {
+                        const w = Math.round((c.answered / maxQ) * 100);
+                        return `
+                        <div class="space-y-1">
+                            <div class="flex items-center justify-between text-xs">
+                                <span class="font-semibold text-slate-300 truncate pr-2">${c.name}</span>
+                                <span class="font-black text-amber-400 shrink-0">${c.answered} q.</span>
+                            </div>
+                            <div class="w-full h-2.5 rounded-full bg-slate-800 overflow-hidden">
+                                <div class="h-full rounded-full transition-all duration-500" style="width:${w}%;background:${barColors[i % barColors.length]}"></div>
+                            </div>
+                        </div>`;
+                    }).join('');
+                }
+            }
+
+            // --- Tabela por tópico ---
+            const tbody = document.getElementById('metrics-topics-tbody');
+            if (tbody) {
+                if (topicRows.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-slate-500 text-xs">Responda questões para ver o desempenho por tópico.</td></tr>`;
+                } else {
+                    tbody.innerHTML = topicRows.map(r => {
+                        let badgeCls = 'bg-emerald-500/20 text-emerald-400';
+                        if (r.pct < 50) badgeCls = 'bg-rose-500/20 text-rose-400';
+                        else if (r.pct < 70) badgeCls = 'bg-amber-500/20 text-amber-400';
+                        const warn = r.pct < 50 ? '⚠️ ' : '';
+                        return `
+                        <tr class="hover:bg-slate-950/60 transition">
+                            <td class="py-3 px-4 text-xs font-semibold text-slate-300 whitespace-nowrap">${r.cat}</td>
+                            <td class="py-3 px-4 text-xs text-slate-200">${warn}${r.topic}</td>
+                            <td class="py-3 px-4 text-xs text-center font-bold text-slate-300">${r.answered}</td>
+                            <td class="py-3 px-4 text-center"><span class="px-2 py-0.5 rounded-full text-[11px] font-black ${badgeCls}">${r.pct}%</span></td>
+                            <td class="py-3 px-4 text-xs text-center text-slate-400">${r.correct}/${r.answered}</td>
+                        </tr>`;
+                    }).join('');
+                }
+            }
         }
 
 
