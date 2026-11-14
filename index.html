@@ -218,17 +218,7 @@
         html.light .bg-amber-500\/10 {
             background-color: rgba(245, 158, 11, 0.1) !important;
         }
-
-        /* Floating timer */
-        html.light #floating-timer-widget {
-            background-color: #ffffff !important;
-            border-color: #f59e0b !important;
-            color: #0f172a !important;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
-        }
-
-
-        /* Texto das questões e enunciados - máxima legibilidade */
+/* Texto das questões e enunciados - máxima legibilidade */
         html.light #quiz-questions-list h4,
         html.light #quiz-questions-list h5,
         html.light #quiz-questions-list p,
@@ -348,6 +338,11 @@
 
                 <div id="auth-error-box" class="hidden p-3 rounded-xl bg-rose-950/80 border border-rose-500 text-rose-300 text-xs font-semibold"></div>
                 <div id="auth-success-box" class="hidden p-3 rounded-xl bg-emerald-950/80 border border-emerald-500 text-emerald-300 text-xs font-semibold"></div>
+
+                <label class="flex items-center gap-2 cursor-pointer select-none">
+                    <input type="checkbox" id="auth-keep-logged" checked class="w-4 h-4 rounded accent-amber-500 cursor-pointer" />
+                    <span class="text-xs text-slate-400">Manter conectado automaticamente</span>
+                </label>
 
                 <button type="submit" id="auth-submit-btn" class="w-full py-3.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg transition cursor-pointer flex items-center justify-center gap-2">
                     <span>Acessar Plataforma</span>
@@ -474,6 +469,15 @@
 
         <!-- CONTEÚDO 2: MÉTRICAS E DESEMPENHO POR MATÉRIA/ASSUNTO -->
         <div id="home-content-metrics" class="hidden space-y-6">
+            <!-- Filtro de período -->
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mr-1">Período:</span>
+                <button onclick="setMetricsPeriod('today')" id="period-today" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 transition cursor-pointer">Hoje</button>
+                <button onclick="setMetricsPeriod('7d')" id="period-7d" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 transition cursor-pointer">7 dias</button>
+                <button onclick="setMetricsPeriod('30d')" id="period-30d" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 transition cursor-pointer">30 dias</button>
+                <button onclick="setMetricsPeriod('all')" id="period-all" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-500 text-slate-950 transition cursor-pointer">Sempre</button>
+            </div>
+
             <!-- Resumo global -->
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div class="bg-slate-900 rounded-2xl p-4 border border-slate-800 text-center">
@@ -669,6 +673,9 @@
                 <span class="px-3 py-1.5 rounded-xl bg-rose-950/80 border border-rose-700/60 text-rose-400 text-xs font-bold flex items-center gap-1">
                     ✕ <span id="quiz-wrong-count">0</span>
                 </span>
+                <button onclick="resetSimuladoAnswers()" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-rose-950/50 text-slate-300 hover:text-rose-400 border border-slate-700 text-xs font-bold transition cursor-pointer" title="Zerar respostas deste simulado">
+                    Zerar questões
+                </button>
             </div>
         </div>
 
@@ -736,19 +743,6 @@
                 </div>
             </div>
         </div>
-    </div>
-
-    <!-- =========================================================
-         CRONÔMETRO FLUTUANTE
-         ========================================================= -->
-    <div id="floating-timer-widget" class="hidden fixed bottom-6 right-6 z-40 bg-slate-900 backdrop-blur-md text-white px-4 py-2.5 rounded-2xl border border-amber-500/40 shadow-2xl flex items-center gap-3">
-        <div class="flex items-center gap-2">
-            <span class="text-amber-400 text-sm">⏱️</span>
-            <span id="floating-timer-display" class="font-mono font-black text-sm tracking-wider text-white">00:00:00</span>
-        </div>
-        <button onclick="toggleTimer()" id="floating-timer-toggle-btn" class="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 text-[11px] font-black transition cursor-pointer">
-            Pausar
-        </button>
     </div>
 
     <!-- =========================================================
@@ -904,7 +898,7 @@
          ========================================================= -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, signInWithPopup, GoogleAuthProvider, sendPasswordResetEmail, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, signInWithPopup, GoogleAuthProvider, sendPasswordResetEmail, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, deleteDoc, collection, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const defaultFirebaseConfig = {
@@ -1013,10 +1007,6 @@
         let currentQuizFilter = 'all';
         let questionComments = {};
         let avisosList = [];
-        
-        let timerSeconds = 0;
-        let timerInterval = null;
-        let isTimerRunning = true;
 
         function checkAdminPrivileges() {
             const adminBtn = document.getElementById('admin-trigger-btn');
@@ -1113,6 +1103,10 @@
             try {
                 let userCred;
                 if (auth) {
+                    const keepLogged = document.getElementById('auth-keep-logged')?.checked !== false;
+                    await setPersistence(auth, keepLogged ? browserLocalPersistence : browserSessionPersistence);
+                    localStorage.setItem('oficializa_keep_logged', keepLogged ? '1' : '0');
+
                     if (authCurrentMode === 'register') {
                         userCred = await createUserWithEmailAndPassword(auth, email, password);
                         await updateProfile(userCred.user, { displayName: name });
@@ -1150,6 +1144,9 @@
             errBox.classList.add('hidden');
             try {
                 if (!auth) throw new Error("Google Login disponível online.");
+                const keepLogged = document.getElementById('auth-keep-logged')?.checked !== false;
+                await setPersistence(auth, keepLogged ? browserLocalPersistence : browserSessionPersistence);
+                localStorage.setItem('oficializa_keep_logged', keepLogged ? '1' : '0');
                 const provider = new GoogleAuthProvider();
                 const result = await signInWithPopup(auth, provider);
                 currentUser = result.user;
@@ -1264,19 +1261,15 @@
             document.getElementById('active-sim-subtitle').textContent = activeSimulado.category;
             document.getElementById('view-home').classList.add('hidden');
             document.getElementById('view-quiz').classList.remove('hidden');
-            document.getElementById('floating-timer-widget').classList.remove('hidden');
             eliminatedOptions = {};
             currentQuizFilter = 'all';
             listenCommentsForSimulado(simId);
-            startTimer();
             loadUserProgressAndRender();
             window.scrollTo({ top: 0, behavior: 'smooth' });
         };
 
         window.goHome = function() {
-            stopTimer();
             if (commentsUnsubscribe) { commentsUnsubscribe(); commentsUnsubscribe = null; }
-            document.getElementById('floating-timer-widget').classList.add('hidden');
             document.getElementById('view-quiz').classList.add('hidden');
             document.getElementById('view-home').classList.remove('hidden');
             renderDetailedMetrics();
@@ -1310,28 +1303,6 @@
             if (tab === 'cronograma') renderCronograma();
         };
 
-        function startTimer() {
-            timerSeconds = 0;
-            isTimerRunning = true;
-            if (timerInterval) clearInterval(timerInterval);
-            timerInterval = setInterval(() => {
-                if (isTimerRunning) {
-                    timerSeconds++;
-                    const hrs = String(Math.floor(timerSeconds / 3600)).padStart(2, '0');
-                    const mins = String(Math.floor((timerSeconds % 3600) / 60)).padStart(2, '0');
-                    const secs = String(timerSeconds % 60).padStart(2, '0');
-                    const el = document.getElementById('floating-timer-display');
-                    if (el) el.textContent = `${hrs}:${mins}:${secs}`;
-                }
-            }, 1000);
-        }
-
-        function stopTimer() { if (timerInterval) clearInterval(timerInterval); }
-        window.toggleTimer = function() {
-            isTimerRunning = !isTimerRunning;
-            document.getElementById('floating-timer-toggle-btn').textContent = isTimerRunning ? "Pausar" : "Retomar";
-        };
-
         function renderQuizQuestions() {
             if (!activeSimulado) return;
             const container = document.getElementById('quiz-questions-list');
@@ -1342,7 +1313,7 @@
             let wrongCount = 0;
 
             activeSimulado.questions.forEach((q) => {
-                const userChoice = userAnswers[activeSimulado.id]?.[q.id];
+                const userChoice = getAnswerKey(userAnswers[activeSimulado.id]?.[q.id]);
                 const isAnswered = Boolean(userChoice);
                 const isCorrect = userChoice === q.correct;
                 const qEliminated = eliminatedOptions[q.id] || {};
@@ -1552,9 +1523,65 @@
         window.selectOption = function(qId, optKey) {
             if (!activeSimulado) return;
             if (!userAnswers[activeSimulado.id]) userAnswers[activeSimulado.id] = {};
-            userAnswers[activeSimulado.id][qId] = optKey;
+            // Compatível com formato antigo (string) e novo (objeto com timestamp)
+            userAnswers[activeSimulado.id][qId] = { answer: optKey, at: Date.now() };
             saveUserAnswersToCloud();
             renderQuizQuestions();
+        };
+
+        function getAnswerKey(val) {
+            if (val == null) return null;
+            if (typeof val === 'string') return val;
+            if (typeof val === 'object' && val.answer) return val.answer;
+            return null;
+        }
+
+        function getAnswerTime(val) {
+            if (val == null) return null;
+            if (typeof val === 'object' && val.at) return val.at;
+            return null; // formato antigo sem timestamp = conta em "Sempre"
+        }
+
+        function answerInPeriod(val, period) {
+            if (period === 'all') return getAnswerKey(val) != null;
+            const t = getAnswerTime(val);
+            if (t == null) return period === 'all'; // sem data só entra em Sempre
+            const now = Date.now();
+            if (period === 'today') {
+                const start = new Date(); start.setHours(0,0,0,0);
+                return t >= start.getTime();
+            }
+            if (period === '7d') return t >= now - 7 * 86400000;
+            if (period === '30d') return t >= now - 30 * 86400000;
+            return true;
+        }
+
+        let metricsPeriod = 'all';
+        window.setMetricsPeriod = function(period) {
+            metricsPeriod = period;
+            ['today','7d','30d','all'].forEach(p => {
+                const btn = document.getElementById('period-' + p);
+                if (!btn) return;
+                if (p === period) {
+                    btn.className = "px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-500 text-slate-950 transition cursor-pointer";
+                } else {
+                    btn.className = "px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 transition cursor-pointer";
+                }
+            });
+            renderDetailedMetrics();
+        };
+
+        window.resetSimuladoAnswers = async function() {
+            if (!activeSimulado) return;
+            if (!confirm('Zerar todas as respostas deste simulado? Esta ação não pode ser desfeita.')) return;
+            if (userAnswers[activeSimulado.id]) {
+                delete userAnswers[activeSimulado.id];
+            }
+            eliminatedOptions = {};
+            await saveUserAnswersToCloud();
+            renderQuizQuestions();
+            renderDetailedMetrics();
+            alert('Respostas zeradas.');
         };
 
         window.toggleEliminate = function(event, qId, optKey) {
@@ -1744,9 +1771,10 @@
             let answered = 0;
             let correct = 0;
             activeSimulado.questions.forEach(q => {
-                if (simAns[q.id]) {
+                const ak = getAnswerKey(simAns[q.id]);
+                if (ak) {
                     answered++;
-                    if (simAns[q.id] === q.correct) correct++;
+                    if (ak === q.correct) correct++;
                 }
             });
             const percentage = Math.round((correct / total) * 100);
@@ -1829,6 +1857,52 @@
             return name;
         }
 
+        // Alinha theme da questão ao tópico oficial do edital
+        function mapThemeToEdital(theme, materia) {
+            if (!theme) return theme;
+            const t = theme.toLowerCase();
+            const editalMat = (typeof EDITAL_TOPICS !== 'undefined')
+                ? EDITAL_TOPICS.find(m => m.materia === materia || normalizeMateriaName(m.materia) === materia)
+                : null;
+            if (!editalMat) return theme;
+
+            // Palavras-chave -> tópico do edital (Geografia e gerais)
+            const rules = [
+                [/capitalismo|fordista|acumula[cç][aã]o flex[ií]vel|transnacional|toyotismo|oligop[oó]lio|financeiriza/i, "2.1"],
+                [/fases do capitalismo|revolu[cç][aã]o industrial|capitalismo mercantil|capitalismo industrial|capitalismo monopol/i, "2.1"],
+                [/tecnologia|subordina[cç][aã]o|curva sorriso|smiling|p&d|patente|semicondutor|tecnopolo|depend[eê]ncia tecnol/i, "2.2"],
+                [/estado|neoliberal|fmi|banco mundial|bretton|bloco econ[oô]mico|guerra fiscal|ag[eê]ncia reguladora|soberania monet/i, "2.3"],
+                [/mobilidade|fuga de c[eé]rebros|brain drain|transi[cç][aã]o demogr[aá]fica|b[oô]nus demogr[aá]fico|migra[cç][aã]o|securitiza[cç][aã]o|refugiad/i, "2.4"],
+                [/divis[aã]o internacional|dit cl[aá]ssica|nova dit|cadeia global|nearshoring|reshoring|desindustrializa[cç][aã]o|primitiva[cç][aã]o|cidade global/i, "2.5"],
+                [/guerra fria|urss|otan|multipolar|brics|china|desglobaliza[cç][aã]o|ordem mundial|nova ordem/i, "2.6"],
+                [/sociedade-natureza|recursos naturais|meio ambiente/i, "1."],
+                [/forma[cç][aã]o territorial|espa[cç]o brasileiro|industrializa[cç][aã]o brasileira|regionaliza[cç][aã]o do brasil/i, "3."],
+            ];
+
+            for (const [re, prefix] of rules) {
+                if (re.test(t)) {
+                    const found = editalMat.topics.find(tp => tp.trim().startsWith(prefix) || tp.includes(prefix.replace('.', '')));
+                    if (found) return found;
+                    // fallback: primeiro tópico que começa com o prefixo numérico
+                    const found2 = editalMat.topics.find(tp => tp.trim().match(new RegExp('^' + prefix.replace('.', '\\.'))));
+                    if (found2) return found2;
+                }
+            }
+
+            // Match por inclusão de texto
+            let best = null;
+            let bestScore = 0;
+            editalMat.topics.forEach(tp => {
+                const tpLow = tp.toLowerCase();
+                const words = t.split(/\s+/).filter(w => w.length > 4);
+                let score = 0;
+                words.forEach(w => { if (tpLow.includes(w)) score++; });
+                if (score > bestScore) { bestScore = score; best = tp; }
+            });
+            if (best && bestScore >= 2) return best;
+            return theme;
+        }
+
         function renderDetailedMetrics() {
             let statsByCat = {};
             let totalAnsweredGlobal = 0;
@@ -1842,14 +1916,16 @@
 
                 sim.questions.forEach(q => {
                     statsByCat[cat].total++;
-                    const topic = q.theme || q.subtopicCode || q.category || "Geral";
+                    const rawTheme = q.theme || q.subtopicCode || q.category || "Geral";
+                    const topic = mapThemeToEdital(rawTheme, cat);
                     if (!statsByCat[cat].topics[topic]) {
                         statsByCat[cat].topics[topic] = { total: 0, answered: 0, correct: 0, wrong: 0 };
                     }
                     statsByCat[cat].topics[topic].total++;
 
-                    const ans = userAnswers[sim.id]?.[q.id];
-                    if (ans) {
+                    const rawAns = userAnswers[sim.id]?.[q.id];
+                    if (rawAns && answerInPeriod(rawAns, metricsPeriod)) {
+                        const ans = getAnswerKey(rawAns);
                         statsByCat[cat].answered++;
                         statsByCat[cat].topics[topic].answered++;
                         totalAnsweredGlobal++;
@@ -1888,15 +1964,35 @@
 
             const catList = Object.entries(statsByCat)
                 .filter(([, d]) => d.answered > 0 || d.total > 0)
-                .map(([name, d]) => ({
-                    name,
-                    answered: d.answered,
-                    correct: d.correct,
-                    wrong: d.wrong,
-                    total: d.total,
-                    pct: d.answered > 0 ? Math.round((d.correct / d.answered) * 100) : 0,
-                    progress: d.total > 0 ? Math.round((d.answered / d.total) * 100) : 0
-                }));
+                .map(([name, d]) => {
+                    const editalMat = (typeof EDITAL_TOPICS !== 'undefined')
+                        ? EDITAL_TOPICS.find(m => m.materia === name)
+                        : null;
+                    let progress = 0;
+                    if (editalMat && editalMat.topics.length > 0) {
+                        let covered = 0;
+                        editalMat.topics.forEach(t => {
+                            const has = Object.entries(d.topics).some(([k, v]) => {
+                                if (v.answered <= 0) return false;
+                                const kLow = k.toLowerCase(), tLow = t.toLowerCase();
+                                return kLow.includes(tLow.slice(0, 18)) || tLow.includes(kLow.slice(0, 18)) || k === t;
+                            });
+                            if (has) covered++;
+                        });
+                        progress = Math.round((covered / editalMat.topics.length) * 100);
+                    } else {
+                        progress = d.total > 0 ? Math.round((d.answered / d.total) * 100) : 0;
+                    }
+                    return {
+                        name,
+                        answered: d.answered,
+                        correct: d.correct,
+                        wrong: d.wrong,
+                        total: d.total,
+                        pct: d.answered > 0 ? Math.round((d.correct / d.answered) * 100) : 0,
+                        progress
+                    };
+                });
 
             const barColors = ['#34d399','#60a5fa','#a78bfa','#fbbf24','#fb7185','#2dd4bf','#f472b6','#94a3b8'];
 
@@ -1998,13 +2094,31 @@
                 const stats = statsByCat[matName] || { answered: 0, correct: 0, wrong: 0, total: 0, topics: {} };
                 const pct = stats.answered > 0 ? Math.round((stats.correct / stats.answered) * 100) : null;
 
+                // Progresso no edital = subtópicos com pelo menos 1 resposta / total de subtópicos do edital
+                const editalTopicCount = editalMat ? editalMat.topics.length : Object.keys(stats.topics).length;
+                let coveredTopics = 0;
+                if (editalMat) {
+                    editalMat.topics.forEach(t => {
+                        const has = Object.entries(stats.topics).some(([k, v]) => {
+                            if (v.answered <= 0) return false;
+                            const kLow = k.toLowerCase();
+                            const tLow = t.toLowerCase();
+                            return kLow.includes(tLow.slice(0, 18)) || tLow.includes(kLow.slice(0, 18)) || k === t;
+                        });
+                        if (has) coveredTopics++;
+                    });
+                } else {
+                    coveredTopics = Object.values(stats.topics).filter(v => v.answered > 0).length;
+                }
+                const editalProgress = editalTopicCount > 0 ? Math.round((coveredTopics / editalTopicCount) * 100) : 0;
+
                 let matBadge = '';
                 if (stats.answered === 0) {
                     matBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold border border-slate-600 text-slate-400">Não iniciado</span>`;
-                } else if (pct >= 70) {
+                } else if (editalProgress >= 80 && pct >= 70 && stats.answered >= 10) {
                     matBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">CONCLUÍDO · ${pct}%</span>`;
                 } else {
-                    matBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30">Em andamento · ${pct}%</span>`;
+                    matBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30">Em andamento · ${pct != null ? pct : 0}% · Edital ${editalProgress}%</span>`;
                 }
 
                 let topicList = [];
@@ -2026,17 +2140,16 @@
                 const topicsHtml = topicList.map(tp => {
                     const s = tp.stats;
                     let badge = '';
+                    const p = s.answered > 0 ? Math.round((s.correct / s.answered) * 100) : 0;
+                    // CONCLUÍDO só com volume mínimo de questões e bom desempenho
                     if (s.answered === 0) {
                         badge = `<span class="text-[10px] text-slate-500">0 questões</span>`;
+                    } else if (s.answered >= 5 && p >= 70) {
+                        badge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">CONCLUÍDO</span>`;
+                    } else if (p >= 50) {
+                        badge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30">${p}%</span>`;
                     } else {
-                        const p = Math.round((s.correct / s.answered) * 100);
-                        if (p >= 70) {
-                            badge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">CONCLUÍDO</span>`;
-                        } else if (p >= 50) {
-                            badge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30">${p}%</span>`;
-                        } else {
-                            badge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/15 text-rose-400 border border-rose-500/30">${p}%</span>`;
-                        }
+                        badge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/15 text-rose-400 border border-rose-500/30">${p}%</span>`;
                     }
                     const qInfo = s.answered > 0
                         ? `<span class="text-[10px] text-slate-400 font-semibold">${s.answered} questões · ${s.correct} acertos</span>`
@@ -2058,7 +2171,7 @@
                                 <span id="materia-chevron-${idx}" class="text-slate-500 text-xs">▶</span>
                                 <div class="min-w-0">
                                     <span class="text-sm font-bold text-white block truncate">${matName}</span>
-                                    <span class="text-[10px] text-slate-500">${stats.answered} questões respondidas${stats.total ? ' · ' + stats.total + ' disponíveis' : ''}</span>
+                                    <span class="text-[10px] text-slate-500">${stats.answered} questões · cobertura do edital ${editalProgress}% (${coveredTopics}/${editalTopicCount || 0} tópicos)</span>
                                 </div>
                             </div>
                             <div class="shrink-0">${matBadge}</div>
