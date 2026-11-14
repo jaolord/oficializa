@@ -828,7 +828,22 @@
                         </div>
                         <div>
                             <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Matéria / Categoria</label>
-                            <input type="text" id="admin-category" required placeholder="Ex: Direito Constitucional" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-white text-sm focus:border-amber-500 focus:outline-none" />
+                            <select id="admin-category" required class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-white text-sm focus:border-amber-500 focus:outline-none">
+                                <option value="">Selecione a matéria...</option>
+                                <option value="I. Língua Portuguesa">I. Língua Portuguesa</option>
+                                <option value="II. Língua Inglesa">II. Língua Inglesa</option>
+                                <option value="III. Matemática">III. Matemática</option>
+                                <option value="IV. Informática">IV. Informática</option>
+                                <option value="V. História">V. História</option>
+                                <option value="V. Geografia">V. Geografia</option>
+                                <option value="VI. Direito Constitucional">VI. Direito Constitucional</option>
+                                <option value="VI. Direitos Humanos">VI. Direitos Humanos</option>
+                                <option value="VI. Direito Administrativo">VI. Direito Administrativo</option>
+                                <option value="VI. Direito Penal">VI. Direito Penal</option>
+                                <option value="VI. Direito Processual Penal">VI. Direito Processual Penal</option>
+                                <option value="VI. Direito Penal Militar">VI. Direito Penal Militar</option>
+                                <option value="VI. Direito Processual Penal Militar">VI. Direito Processual Penal Militar</option>
+                            </select>
                         </div>
                     </div>
                     <div>
@@ -1313,7 +1328,7 @@
             let wrongCount = 0;
 
             activeSimulado.questions.forEach((q) => {
-                const userChoice = getAnswerKey(userAnswers[activeSimulado.id]?.[q.id]);
+                const userChoice = getAnswerKey(answerKey(activeSimulado.id, q.id));
                 const isAnswered = Boolean(userChoice);
                 const isCorrect = userChoice === q.correct;
                 const qEliminated = eliminatedOptions[q.id] || {};
@@ -1493,14 +1508,16 @@
                 if (localSaved) userAnswers = JSON.parse(localSaved);
             } catch (e) {}
 
-            if (!db) return;
-            try {
-                const progressDoc = await getDoc(doc(db, 'artifacts', appId, 'public', 'data', 'user_progress', currentUser.uid));
-                if (progressDoc.exists() && progressDoc.data().answers) {
-                    userAnswers = progressDoc.data().answers;
-                    localStorage.setItem(localKey, JSON.stringify(userAnswers));
-                }
-            } catch (err) {}
+            if (db) {
+                try {
+                    const progressDoc = await getDoc(doc(db, 'artifacts', appId, 'public', 'data', 'user_progress', currentUser.uid));
+                    if (progressDoc.exists() && progressDoc.data().answers) {
+                        userAnswers = progressDoc.data().answers;
+                        localStorage.setItem(localKey, JSON.stringify(userAnswers));
+                    }
+                } catch (err) {}
+            }
+            migrateAnswersFormat();
         }
 
         async function saveUserAnswersToCloud() {
@@ -1520,40 +1537,70 @@
             } catch (err) {}
         }
 
+        function answerKey(simId, qId) {
+            // Normaliza acesso independente de string/number
+            const bucket = userAnswers[simId];
+            if (!bucket) return null;
+            if (bucket[qId] != null) return bucket[qId];
+            if (bucket[String(qId)] != null) return bucket[String(qId)];
+            if (bucket[Number(qId)] != null) return bucket[Number(qId)];
+            return null;
+        }
+
         window.selectOption = function(qId, optKey) {
             if (!activeSimulado) return;
-            if (!userAnswers[activeSimulado.id]) userAnswers[activeSimulado.id] = {};
-            // Compatível com formato antigo (string) e novo (objeto com timestamp)
-            userAnswers[activeSimulado.id][qId] = { answer: optKey, at: Date.now() };
+            const sid = activeSimulado.id;
+            if (!userAnswers[sid]) userAnswers[sid] = {};
+            // Sempre grava com chave string para consistência
+            userAnswers[sid][String(qId)] = { answer: optKey, at: Date.now() };
             saveUserAnswersToCloud();
             renderQuizQuestions();
         };
 
         function getAnswerKey(val) {
-            if (val == null) return null;
+            if (val == null || val === undefined) return null;
             if (typeof val === 'string') return val;
-            if (typeof val === 'object' && val.answer) return val.answer;
+            if (typeof val === 'object' && val.answer != null) return val.answer;
             return null;
         }
 
         function getAnswerTime(val) {
             if (val == null) return null;
-            if (typeof val === 'object' && val.at) return val.at;
-            return null; // formato antigo sem timestamp = conta em "Sempre"
+            if (typeof val === 'object' && typeof val.at === 'number') return val.at;
+            return null;
         }
 
         function answerInPeriod(val, period) {
-            if (period === 'all') return getAnswerKey(val) != null;
+            if (getAnswerKey(val) == null) return false;
+            if (period === 'all') return true;
             const t = getAnswerTime(val);
-            if (t == null) return period === 'all'; // sem data só entra em Sempre
+            // Respostas antigas sem timestamp: incluem em 30d e Sempre (assumem recentes o bastante)
+            if (t == null) return period === '30d' || period === 'all';
             const now = Date.now();
             if (period === 'today') {
                 const start = new Date(); start.setHours(0,0,0,0);
                 return t >= start.getTime();
             }
-            if (period === '7d') return t >= now - 7 * 86400000;
-            if (period === '30d') return t >= now - 30 * 86400000;
+            if (period === '7d') return t >= (now - 7 * 86400000);
+            if (period === '30d') return t >= (now - 30 * 86400000);
             return true;
+        }
+
+        // Migra respostas antigas (string) para objeto com timestamp
+        function migrateAnswersFormat() {
+            let changed = false;
+            Object.keys(userAnswers || {}).forEach(simId => {
+                const bucket = userAnswers[simId];
+                if (!bucket || typeof bucket !== 'object') return;
+                Object.keys(bucket).forEach(qId => {
+                    const v = bucket[qId];
+                    if (typeof v === 'string') {
+                        bucket[qId] = { answer: v, at: Date.now() };
+                        changed = true;
+                    }
+                });
+            });
+            if (changed) saveUserAnswersToCloud();
         }
 
         let metricsPeriod = 'all';
@@ -1771,7 +1818,7 @@
             let answered = 0;
             let correct = 0;
             activeSimulado.questions.forEach(q => {
-                const ak = getAnswerKey(simAns[q.id]);
+                const ak = getAnswerKey(answerKey(activeSimulado.id, q.id));
                 if (ak) {
                     answered++;
                     if (ak === q.correct) correct++;
@@ -1923,7 +1970,7 @@
                     }
                     statsByCat[cat].topics[topic].total++;
 
-                    const rawAns = userAnswers[sim.id]?.[q.id];
+                    const rawAns = answerKey(sim.id, q.id);
                     if (rawAns && answerInPeriod(rawAns, metricsPeriod)) {
                         const ans = getAnswerKey(rawAns);
                         statsByCat[cat].answered++;
@@ -2311,7 +2358,16 @@
             if (!sim) return;
             document.getElementById('admin-sim-id').value = sim.id;
             document.getElementById('admin-title').value = sim.title;
-            document.getElementById('admin-category').value = sim.category;
+            const catSel = document.getElementById('admin-category');
+            const catVal = sim.category || "";
+            // Se a categoria não estiver na lista, adiciona temporariamente
+            if (catVal && !Array.from(catSel.options).some(o => o.value === catVal)) {
+                const opt = document.createElement('option');
+                opt.value = catVal;
+                opt.textContent = catVal;
+                catSel.appendChild(opt);
+            }
+            catSel.value = catVal;
             document.getElementById('admin-json').value = JSON.stringify(sim.questions, null, 2);
             document.getElementById('admin-form-title').textContent = "Editando: " + sim.title;
         };
