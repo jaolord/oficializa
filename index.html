@@ -430,6 +430,15 @@
             <button onclick="switchHomeTab('cronograma')" id="home-tab-cronograma-btn" class="flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider text-slate-400 hover:text-white transition cursor-pointer">Cronograma</button>
         </div>
 
+        <!-- Mensagem motivacional do dia -->
+        <div id="daily-motivation-card" class="rounded-2xl bg-gradient-to-r from-amber-500/15 via-slate-900 to-slate-900 border border-amber-500/30 px-5 py-4 flex items-start gap-3">
+            <span class="text-2xl shrink-0">💪</span>
+            <div class="min-w-0">
+                <span class="text-[10px] font-extrabold uppercase tracking-widest text-amber-400 block mb-0.5">Mensagem do dia</span>
+                <p id="daily-motivation-text" class="text-sm text-slate-200 font-medium leading-relaxed">—</p>
+            </div>
+        </div>
+
         <!-- CONTEÚDO 1: CATÁLOGO DE SIMULADOS -->
         <div id="home-content-catalog" class="space-y-8">
             <!-- Banner -->
@@ -787,8 +796,20 @@
                 </div>
                 <button onclick="closeNotificationsModal()" class="text-slate-400 hover:text-white p-2 text-xl font-bold cursor-pointer">✕</button>
             </div>
-            <div id="notifications-list" class="space-y-3 max-h-96 overflow-y-auto pr-1">
-                <!-- Preenchido via JS -->
+            <div class="space-y-5 max-h-[70vh] overflow-y-auto pr-1">
+                <!-- Changelog -->
+                <div>
+                    <h4 class="text-[11px] font-black uppercase tracking-wider text-amber-400 mb-2">Novidades da plataforma</h4>
+                    <div id="changelog-list" class="space-y-2">
+                        <!-- Preenchido via JS -->
+                    </div>
+                </div>
+                <div class="border-t border-slate-800 pt-4">
+                    <h4 class="text-[11px] font-black uppercase tracking-wider text-slate-400 mb-2">Avisos oficiais</h4>
+                    <div id="notifications-list" class="space-y-3">
+                        <!-- Preenchido via JS -->
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -1698,6 +1719,7 @@
             const modal = document.getElementById('notifications-modal');
             modal.classList.remove('hidden');
             modal.classList.add('flex');
+            renderChangelog();
             
             if (avisosList.length > 0) {
                 const latestId = avisosList[0].id || String(avisosList[0].time);
@@ -2859,7 +2881,85 @@
             alert(`Cronograma gerado!\n\n${topicIdx} tópicos distribuídos com revisões espaçadas (1, 3, 7, 14 e 30 dias).\nVocê pode editar qualquer dia manualmente.`);
         };
 
-        window.addEventListener('DOMContentLoaded', initApp);
+
+        // ========== MENSAGENS MOTIVACIONAIS DO DIA ==========
+        const MOTIVATIONAL_MESSAGES = [
+            "Cada questão resolvida é um passo a mais na direção da farda. Continua.",
+            "Disciplina vence motivação: estude hoje, mesmo que por poucos minutos.",
+            "O CFO não se conquista em um dia — se constrói questão por questão.",
+            "Cansaço passa. Arrependimento de não ter estudado fica. Bora revisar.",
+            "Você não precisa ser o melhor de todos. Precisa ser melhor do que ontem.",
+            "Metade do caminho já foi. A outra metade começa agora, nesta sessão.",
+            "Errar na plataforma é treino. Errar na prova é prejuízo. Treine mais.",
+            "Foco no processo: abra o simulado, responda com atenção, analise o gabarito.",
+            "Quem estuda quando não tem vontade é quem chega na lista de aprovados.",
+            "Sua concorrência está estudando. Não entregue o dia de graça.",
+            "Pequenos avanços diários constroem grandes resultados no CFO.",
+            "Revise o que errou. É ali que está o seu maior ganho de pontos.",
+            "A farda não se ganha no dia da prova — se conquista nos dias de treino.",
+            "Hoje é um bom dia para fechar mais um tópico do edital.",
+            "Constância > intensidade. Estude todo dia, mesmo que pouco.",
+            "Não compare seu capítulo 3 com o capítulo 20 de outra pessoa. Siga seu ritmo.",
+            "Dúvida anotada é dúvida que vira acerto na próxima vez.",
+            "O ranking sobe com esforço silencioso. Foque no seu desempenho.",
+            "Desligar as distrações por 40 minutos pode mudar o seu resultado.",
+            "Você já veio longe. Não desista na reta que mais importa.",
+            "Estudar o que é difícil agora evita surpresa na hora da prova.",
+            "Uma sessão bem feita vale mais do que três sessões distraídas.",
+            "Respira. Organiza o cronograma. Executa. É assim que se vence o edital.",
+            "Seu futuro oficial agradece cada página e cada questão de hoje.",
+            "Menos desculpa, mais questão comentada. Você consegue.",
+            "O edital é grande, mas não é infinito. Vá eliminando tópico por tópico.",
+            "Hoje: uma matéria, um simulado, um avanço real.",
+            "Aprovação é hábito. Transforme o estudo em rotina, não em evento.",
+            "Quando bater o cansaço, lembre por que você começou.",
+            "Excelência não é acaso — é repetição com atenção."
+        ];
+
+        function getDailyMotivation() {
+            const now = new Date();
+            const start = new Date(now.getFullYear(), 0, 0);
+            const dayOfYear = Math.floor((now - start) / 86400000);
+            return MOTIVATIONAL_MESSAGES[dayOfYear % MOTIVATIONAL_MESSAGES.length];
+        }
+
+        function renderDailyMotivation() {
+            const el = document.getElementById('daily-motivation-text');
+            if (el) el.textContent = getDailyMotivation();
+        }
+
+        // ========== CHANGELOG (só o que o usuário precisa saber) ==========
+        const USER_CHANGELOG = [
+            { date: "Nov/2026", title: "Tema claro e escuro", desc: "Alterne entre modo noturno e claro no ícone de sol/lua no topo." },
+            { date: "Nov/2026", title: "Cronograma de estudos", desc: "Monte seu plano de estudo ou gere automaticamente com revisões pela Curva do Esquecimento." },
+            { date: "Nov/2026", title: "Painel de Desempenho", desc: "Acompanhe acertos, erros e progresso por disciplina e por tópico do edital." },
+            { date: "Nov/2026", title: "Filtro por período", desc: "Veja seu desempenho de Hoje, últimos 7 dias, 30 dias ou desde o início." },
+            { date: "Nov/2026", title: "Zerar questões do simulado", desc: "Botão para limpar as respostas de um simulado e refazer do zero." },
+            { date: "Nov/2026", title: "Comentários sob demanda", desc: "Abra ou feche os comentários de cada questão quando quiser." },
+            { date: "Nov/2026", title: "Manter conectado", desc: "No login, escolha se deseja permanecer logado automaticamente." },
+            { date: "Nov/2026", title: "Edital organizado", desc: "Matérias expansíveis no Desempenho, alinhadas ao edital do CFO PMBA." },
+            { date: "Nov/2026", title: "Mensagem do dia", desc: "Todo dia uma mensagem nova para manter o foco nos estudos." }
+        ];
+
+        function renderChangelog() {
+            const el = document.getElementById('changelog-list');
+            if (!el) return;
+            el.innerHTML = USER_CHANGELOG.map(item => `
+                <div class="p-3 rounded-xl bg-slate-950 border border-slate-800">
+                    <div class="flex items-center justify-between gap-2 mb-0.5">
+                        <span class="text-xs font-bold text-white">${item.title}</span>
+                        <span class="text-[10px] text-slate-500 shrink-0">${item.date}</span>
+                    </div>
+                    <p class="text-[11px] text-slate-400 leading-relaxed">${item.desc}</p>
+                </div>
+            `).join('');
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            initApp();
+            renderDailyMotivation();
+            renderChangelog();
+        });
     </script>
 </body>
 </html>
